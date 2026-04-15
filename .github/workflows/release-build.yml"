@@ -1,0 +1,542 @@
+# ============================================================================
+# GitHub Actions Workflow: Build & Release (Single-File, Self-Contained)
+# ============================================================================
+#
+# GOALS:
+#   1) Single-file EXE (self-contained .NET, win-x64)
+#   2) Clean Release only (no symbols/docs) + safety guards against strays
+#   3) Publish-based packaging (ready-to-run folder) with companions included
+#   4) Supply-chain hardening: action pinning (commit SHAs required)
+#
+# OUTPUT:
+#   - ZIP:  Smart_Stay_Awake_3_v{tag}_x64_win10_win11.zip
+#   - TXT:  Smart_Stay_Awake_3_v{tag}_x64_win10_win11_SHA256.txt
+#
+# TRIGGER:
+#   - On publishing a GitHub Release (Releases → Draft → Publish)
+#
+# NOTES:
+#   - Self-contained + SingleFile yields a single EXE; we also ship the icon,
+#     LICENSE, and any DLL companions emitted by publish.
+#   - ReadyToRun is enabled to improce startup speed.
+#   - Globalization is KEPT (InvariantGlobalization=false).
+#   - We DO NOT care about ZIP size; correctness & transparency first.
+#
+# ============================================================================
+
+name: Build and Release (SingleFile)
+
+on:
+  release:
+    types: [published]
+
+# Avoid parallel runs for the same tag; cancel older if a new one starts
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+# Needed to upload files to the release
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: src
+
+    steps:
+      # ----------------------------------------------------------------------
+      # 0) Action pinning — IMPORTANT
+      # ----------------------------------------------------------------------
+      # Replace the placeholders below with the PUBLISHED commit SHAs.
+      # You can find the canonical SHAs in each action's GitHub repo under
+      # the "Releases" or "Tags" tab. Example format:
+      #   uses: actions/checkout@<COMMIT-SHA>  # v4.1.0
+      # Until you replace them, the '@vX' tags are left to keep the workflow
+      # runnable, but we strongly recommend pinning to SHAs for supply-chain
+      # hardening.
+      #
+      # Example (replace with real SHAs once known):
+      #   actions/checkout:         <CHECKOUT_SHA_FOR_v4>
+      #   actions/setup-dotnet:     <SETUP_DOTNET_SHA_FOR_v4>
+      #   actions/upload-artifact:  <UPLOAD_ARTIFACT_SHA_FOR_v4>
+      #   softprops/action-gh-release: <GH_RELEASE_SHA_FOR_v2>
+
+      # ----------------------------------------------------------------------
+      # 1) Checkout source
+      # ----------------------------------------------------------------------
+      - name: 📥 Checkout repository
+        # uses: actions/checkout@<CHECKOUT_SHA_FOR_v4>  # <- PIN ME
+        uses: actions/checkout@v4
+
+      # ----------------------------------------------------------------------
+      # 2) Enable long paths (defensive; harmless) + show PS version
+      # ----------------------------------------------------------------------
+      # Use --global for long-paths config (avoid privilege issues)
+      # Step 2 originally used git config --system core.longpaths true with $ErrorActionPreference='Stop'.
+      #   On GitHub’s hosted runners, --system can fail due to permissions and would hard-fail the job.
+      #   Using --global instead is safer and achieves the same effect for this workspace.
+      - name: ⚙️ Configure Git for long paths & show PowerShell version
+        shell: pwsh
+        working-directory: .
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config --global core.longpaths true
+          Write-Host "PowerShell version:" -ForegroundColor Yellow
+          $PSVersionTable.PSVersion
+
+      # ----------------------------------------------------------------------
+      # 3) Show build context
+      # ----------------------------------------------------------------------
+      - name: 🔍 Display build information
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          Write-Host "════════ BUILD CONTEXT ════════" -ForegroundColor Cyan
+          Write-Host "Tag:        ${{ github.ref_name }}"
+          Write-Host "Repository: ${{ github.repository }}"
+          Write-Host "Runner:     ${{ runner.os }}"
+          Write-Host "Mode:       Publish (Self-Contained, SingleFile, win-x64)"
+          Write-Host "═══════════════════════════════" -ForegroundColor Cyan
+
+      # ----------------------------------------------------------------------
+      # 4) Setup .NET 10 (+ NuGet cache)
+      #    We cache both lock files and csproj as a fallback.
+      # ----------------------------------------------------------------------
+      - name: 🔧 Setup .NET 10 SDK (with NuGet cache)
+        # uses: actions/setup-dotnet@<SETUP_DOTNET_SHA_FOR_v4>  # <- PIN ME
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: |
+            **/packages.lock.json
+            **/*.csproj
+
+      # ----------------------------------------------------------------------
+      # 5) Verify SDK
+      # ----------------------------------------------------------------------
+      - name: ✅ Verify .NET installation
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          where dotnet
+          Write-Host "dotnet exe:" (Get-Command dotnet).Source
+          dotnet --info
+          dotnet --list-sdks
+          Write-Host "DOTNET_ROOT=$env:DOTNET_ROOT"
+
+      # ----------------------------------------------------------------------
+      # 6) Restore packages (solution is at repo root, so use ..\)
+      # ----------------------------------------------------------------------
+      - name: 📦 Restore NuGet packages
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          & "$env:DOTNET_ROOT\dotnet.exe" restore ..\Smart_Stay_Awake_3.sln -r win-x64 --verbosity minimal
+
+      # ----------------------------------------------------------------------
+      # 7) Publish (Release, Self-Contained, SingleFile, win-x64)
+      #    We explicitly disable symbols/docs for a tight release.
+      #    Globalization is kept. ReadyToRun enabled to improce startup speed.
+      #    We also emit MSBuild logs for forensic verification.
+      # ----------------------------------------------------------------------
+      - name: 🔨 Publish single-file EXE (Self-Contained, .NET 10, Release, x64)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          $ProgressPreference = 'SilentlyContinue'
+          Write-Host "Publishing Smart_Stay_Awake_3 as SINGLE FILE (self-contained, win-x64)..." -ForegroundColor Yellow
+
+          # Force specific output directory
+          $publishPath = ".\publish-output"
+
+          # The -c Release flag sometimes gets overridden by project files, 
+          # but -p:Configuration=Release is a direct MSBuild property that takes precedence.
+          # Changed to pubish the Projecvt rather than the solution to avoid '-o' errors
+          # For your current goal (1 single project, deterministic single EXE + known companions),
+          #   'project' publish is the least surprising and keeps Step 8 simple.
+          & "$env:DOTNET_ROOT\dotnet.exe" publish .\Smart_Stay_Awake_3.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:SelfContained=true `
+            -p:Configuration=Release `
+            -p:Optimize=true `
+            -p:PublishSingleFile=true `
+            -p:PublishReadyToRun=true `
+            -p:PublishTrimmed=false `
+            -p:EnableCompressionInSingleFile=true `
+            -p:UseAppHost=true `
+            -p:InvariantGlobalization=false `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:IncludeAllContentForSelfExtract=true `
+            -p:DebugType=None `
+            -p:DebugSymbols=false `
+            -p:IncludeSymbols=false `
+            -p:GenerateDocumentationFile=false `
+            -p:ContinuousIntegrationBuild=true `
+            --no-restore `
+            -bl:publish.binlog `
+            -flp:"logfile=publish.diag.log;verbosity=diagnostic" `
+            -o $publishPath `
+            -v minimal
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "❌ Smart_Stay_Awake_3 Publish FAILED!" -ForegroundColor Red
+            exit 1
+          }
+      
+          Write-Host ""
+          Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host "  Smart_Stay_Awake_3 PUBLISH OUTPUT VERIFICATION" -ForegroundColor Cyan
+          Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+      
+          # Locate the EXE we expect in publish-output
+          $exePath = Join-Path $publishPath "Smart_Stay_Awake_3.exe"
+          if (-not (Test-Path $exePath)) {
+            Write-Host "❌ Expected EXE not found: $exePath" -ForegroundColor Red
+            Write-Host "Files in Publish output:" -ForegroundColor Yellow
+            Get-ChildItem $publishPath -Recurse -File | ForEach-Object { Write-Host "  - $($_.FullName)" -ForegroundColor Gray }
+            exit 1
+          }
+      
+          # File facts - Get EXE file info
+          $exeFile   = Get-Item $exePath
+          $exeSizeMB = "{0:N2}" -f ($exeFile.Length / 1MB)
+          $versionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exePath)
+      
+          # Check for PDB (shouldn't exist in Release with our settings)
+          $pdbPath = [System.IO.Path]::ChangeExtension($exePath, ".pdb")
+          $hasPdb  = Test-Path $pdbPath
+      
+          Write-Host "EXE Location:  $exePath" -ForegroundColor White
+          Write-Host "File Size:     $exeSizeMB MB" -ForegroundColor White
+          Write-Host "Product:       $($versionInfo.ProductName)" -ForegroundColor White
+          Write-Host "Version:       $($versionInfo.ProductVersion)" -ForegroundColor White
+          Write-Host ("Debuggable:    {0}" -f ($(if ($versionInfo.IsDebug) {'YES (DEBUG)'} else {'No (Release)'}))) -ForegroundColor $(if ($versionInfo.IsDebug) {'Red'} else {'Green'})
+          Write-Host ("PDB Present:   {0}" -f ($(if ($hasPdb) {'YES (unexpected)'} else {'No'}))) -ForegroundColor $(if ($hasPdb) {'Yellow'} else {'Green'})
+      
+          # Hard fail if a Debug build detected
+          if ($versionInfo.IsDebug) {
+            Write-Host ""
+            Write-Host "❌ ERROR: EXE $exePath was built with Debug configuration! ... it shows Debuggable=DEBUG. Publish must be Release." -ForegroundColor Red
+            exit 1
+          }
+      
+          # Secondary guard: scan MSBuild diagnostic log for any evaluated Debug config
+          if (Test-Path "publish.diag.log") {
+            $log = Get-Content "publish.diag.log" -Raw
+            if ($log -match "(?im)^\s*Configuration\s*=\s*Debug\s*$") {
+              Write-Host "❌ MSBuild evaluated Configuration=Debug somewhere in the Publish graph." -ForegroundColor Red
+              Write-Host "   See 'publish.diag.log' / 'publish.binlog' artifacts for details." -ForegroundColor Yellow
+              Write-Host "❌ ERROR: EXE $exePath was built with Debug configuration!" -ForegroundColor Red
+              exit 1
+            }
+            Write-Host "MSBuild diagnostic log sanity check: Configuration=Release ✅" -ForegroundColor Green
+          } else {
+            Write-Host "⚠️ publish.diag.log missing (unexpected). Continuing, but please investigate this issue." -ForegroundColor Yellow
+          }
+      
+          Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host "✅ Published Smart_Stay_Awake_3 RELEASE build successfully" -ForegroundColor Green
+          Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host ""
+      
+          # >>> Make $publishPath available to later steps
+          "PUBLISH_ROOT=$publishPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # ----------------------------------------------------------------------
+      # 8) Discover/Verify publish output folder (explicit -o .\publish-output)
+      #    With solution publishing + -o, the SDK creates per-project subfolders:
+      #      .\publish-output\<ProjectName>\Smart_Stay_Awake_3.exe
+      #    We first check the expected path, then fall back to a safe search.
+      # ----------------------------------------------------------------------
+      - name: 🔍 Discover/Verify publish output folder
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+
+          # Respect the value exported by Step 7; fall back if missing.
+          $publishRoot = $env:PUBLISH_ROOT
+          if ([string]::IsNullOrWhiteSpace($publishRoot)) {
+            # Fallback to the default you expect
+            $publishRoot = ".\publish-output"
+          }
+
+          function Show-PublishTree {
+            param([string]$root)
+            if (-not (Test-Path $root)) {
+              Write-Host ("{0} does not exist." -f $root) -ForegroundColor Red
+              return
+            }
+            Write-Host ("Contents of {0} (top 40 entries):" -f $root) -ForegroundColor Yellow
+            Get-ChildItem $root -Recurse | Select-Object -First 40 | ForEach-Object {
+              $rel = $_.FullName.Substring((Resolve-Path $root).Path.Length).TrimStart('\')
+              if ($_.PSIsContainer) { Write-Host ("  📁 " + $rel) -ForegroundColor Blue }
+              else                  { Write-Host ("  📄 " + $rel) -ForegroundColor Gray }
+            }
+          }
+
+          $expectedExe = Join-Path $publishRoot "Smart_Stay_Awake_3.exe"
+          # Note: Because you used -o $publishPath in Step 7, the EXE should be directly 
+          # in that folder. If the SDK nests it, the path usually becomes:
+          # $expectedExe = "$publishRoot/net10.0-windows/win-x64/Smart_Stay_Awake_3.exe"
+          if (Test-Path $expectedExe) {
+            $BUILD_DIR = (Resolve-Path $publishRoot).Path
+            $TFM_NAME  = ("explicit-output (project -o -> {0})" -f $publishRoot)
+            "BUILD_DIR=$BUILD_DIR" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+            "TFM_NAME=$TFM_NAME"   | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+            Write-Host "✅ Found expected publish dir:" -ForegroundColor Green
+            Write-Host ("   {0}" -f $BUILD_DIR) -ForegroundColor Cyan
+          }
+          else {
+            Write-Host ("Expected path not found: {0}" -f $expectedExe) -ForegroundColor Yellow
+            Write-Host ("Falling back to search under {0} ..." -f $publishRoot) -ForegroundColor Yellow
+
+            if (-not (Test-Path $publishRoot)) {
+              Write-Host ("❌ Publish root does not exist: {0}" -f $publishRoot) -ForegroundColor Red
+              Show-PublishTree -root $publishRoot
+              exit 1
+            }
+
+            $exe = Get-ChildItem -Path $publishRoot -Recurse -File -Filter "Smart_Stay_Awake_3.exe" |
+                   Select-Object -First 1
+
+            if (-not $exe) {
+              Write-Host ("❌ Could not find Smart_Stay_Awake_3.exe under {0}" -f $publishRoot) -ForegroundColor Red
+              Show-PublishTree -root $publishRoot
+              exit 1
+            }
+
+            $BUILD_DIR = (Resolve-Path (Split-Path -Parent $exe.FullName)).Path
+            $TFM_NAME  = ("explicit-output (fallback search in {0})" -f $publishRoot)
+            "BUILD_DIR=$BUILD_DIR" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+            "TFM_NAME=$TFM_NAME"   | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+            Write-Host "✅ Found publish dir via fallback search:" -ForegroundColor Green
+            Write-Host ("   {0}" -f $BUILD_DIR) -ForegroundColor Cyan
+          }
+
+          # Surface contents so we can see what (if any) sidecar DLLs rode along.
+          Write-Host "Publish directory contents:" -ForegroundColor Yellow
+          Get-ChildItem $BUILD_DIR -File | ForEach-Object {
+            "{0,-40} {1,10:N0} bytes" -f $_.Name, $_.Length
+          } | Write-Host
+
+      # ----------------------------------------------------------------------
+      # 9) Verify publish output contains the EXE we care about
+      # ----------------------------------------------------------------------
+      - name: 🔍 Verify single-file EXE
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+
+          $buildDir = $env:BUILD_DIR
+          if (-not (Test-Path $buildDir)) { throw "Publish folder not found: $buildDir" }
+
+          $exePath = Join-Path $buildDir "Smart_Stay_Awake_3.exe"
+          if (-not (Test-Path $exePath)) { throw "Executable not found: $exePath" }
+
+          # Surface what else is in publish (there can be support files)
+          $files = Get-ChildItem $buildDir -File
+          Write-Host "Publish files:" -ForegroundColor Cyan
+          $files | ForEach-Object { Write-Host " - $($_.Name)" }
+
+      # ----------------------------------------------------------------------
+      # 10) Verify icon + LICENSE (we ship both next to the EXE in ZIP)
+      # ----------------------------------------------------------------------
+      - name: 🖼️ Verify icon file
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          $iconPath = ".\Assets\Smart_Stay_Awake_3_icon.png"
+          if (-not (Test-Path $iconPath)) { throw "Icon missing: $iconPath" }
+          Write-Host "Icon OK: $iconPath"
+
+      - name: 📜 Verify LICENSE file
+        shell: pwsh
+        working-directory: .
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          $licenseRoot = "LICENSE"
+          if (-not (Test-Path $licenseRoot)) { throw "LICENSE missing at repo root" }
+          Copy-Item $licenseRoot (Join-Path "src" "LICENSE") -Force
+          Write-Host "LICENSE OK: $licenseRoot"
+
+      # ----------------------------------------------------------------------
+      # 11) Stage EXE + icon + LICENSE + ANY companions emitted by publish
+      #     We still guard against stray .pdb/.xml (shouldn't exist with flags).
+      # ----------------------------------------------------------------------
+      - name: 📁 Stage files for packaging (with companions)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+
+          $staging = ".\release-staging"
+          Remove-Item $staging -Recurse -Force -ErrorAction Ignore
+          New-Item -ItemType Directory -Force -Path $staging | Out-Null
+
+          # Required trio
+          Copy-Item (Join-Path $env:BUILD_DIR "Smart_Stay_Awake_3.exe") (Join-Path $staging "Smart_Stay_Awake_3.exe") -Force
+          Copy-Item ".\Assets\Smart_Stay_Awake_3_icon.png" (Join-Path $staging "Smart_Stay_Awake_3_icon.png") -Force
+          Copy-Item ".\LICENSE" (Join-Path $staging "LICENSE") -Force
+
+          # Companions (if any) — everything else from publish folder EXCEPT the main EXE
+          $companions = Get-ChildItem $env:BUILD_DIR -File | Where-Object { $_.Name -ne "Smart_Stay_Awake_3.exe" }
+          foreach ($c in $companions) {
+            Copy-Item $c.FullName (Join-Path $staging $c.Name) -Force
+          }
+
+          # Print staged files + companion summary
+          Write-Host "Staged files:" -ForegroundColor Cyan
+          Get-ChildItem $staging -File | ForEach-Object { Write-Host " - $($_.Name)" }
+
+          $extra = @( Get-ChildItem $staging -File | Where-Object { $_.Name -notin @("Smart_Stay_Awake_3.exe","Smart_Stay_Awake_3_icon.png","LICENSE") } )
+          if ($extra.Count -gt 0) {
+            #Write-Host "Companions included:" -ForegroundColor Yellow
+            Write-Host "Companions included ($($extra.Count) files):" -ForegroundColor Yellow
+            $extra | ForEach-Object { Write-Host "   • $($_.Name)" -ForegroundColor Yellow }
+          } else {
+            Write-Host "No companions were emitted by publish (single-file only)." -ForegroundColor Green
+          }
+
+          # Guard: no stray .pdb or .xml in staging
+          $strays = @( Get-ChildItem $staging -File | Where-Object { $_.Extension -in @(".pdb",".xml") } )
+          if ($strays.Count -gt 0) {
+            Write-Host "Unexpected debug/docs files found in staging:" -ForegroundColor Red
+            $strays | ForEach-Object { Write-Host " - $($_.Name)" -ForegroundColor Red }
+            throw "Stray .pdb/.xml files present in staging — failing per policy."
+          }
+
+          # Final sanity: required trio must exist
+          $required = @("Smart_Stay_Awake_3.exe","Smart_Stay_Awake_3_icon.png","LICENSE")
+          foreach ($req in $required) {
+            if (-not (Test-Path (Join-Path $staging $req))) { throw "Required file missing in staging: $req" }
+          }
+
+      # ----------------------------------------------------------------------
+      # 12) Create ZIP (versioned by tag) with staged files
+      # ----------------------------------------------------------------------
+      - name: 📦 Create release ZIP
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          $ProgressPreference = 'SilentlyContinue'
+
+          $version     = "${{ github.ref_name }}"
+          $zipFileName = "Smart_Stay_Awake_3_x64_dotNET10_Win10_Win11_${version}.zip"
+          Compress-Archive -Path ".\release-staging\*" -DestinationPath $zipFileName -CompressionLevel Optimal -Force
+          if (-not (Test-Path $zipFileName)) { throw "ZIP not created: $zipFileName" }
+          $sz = (Get-Item $zipFileName).Length
+          Write-Host ("ZIP: {0} ({1:N2} MB)" -f $zipFileName, ($sz/1MB))
+
+          "ZIP_PATH=$zipFileName" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      # ----------------------------------------------------------------------
+      # 13) Verify ZIP contains at least the required trio (EXE, icon, LICENSE)
+      # ----------------------------------------------------------------------
+      - name: 🔍 Verify ZIP contents (required trio present)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+          $zipFileName = $env:ZIP_PATH
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($zipFileName)
+          $names = ($zip.Entries | ForEach-Object { $_.Name }) | Sort-Object
+          $zip.Dispose()
+
+          $required = @('Smart_Stay_Awake_3.exe','Smart_Stay_Awake_3_icon.png','LICENSE')
+          foreach ($req in $required) {
+            if ($names -notcontains $req) {
+              Write-Host "ZIP missing required file: $req" -ForegroundColor Red
+              throw "ZIP validation failed."
+            }
+          }
+          Write-Host "ZIP contains required files (EXE, icon, LICENSE)." -ForegroundColor Green
+
+      # ----------------------------------------------------------------------
+      # 14) SHA256 checksum (+ verify round-trip)
+      # ----------------------------------------------------------------------
+      - name: 🔐 Generate and verify SHA256 checksum
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+
+          $zipFileName = $env:ZIP_PATH
+          $shaFile     = "$zipFileName`_SHA256.txt"
+
+          $hash = Get-FileHash -Path $zipFileName -Algorithm SHA256
+          ($hash.Hash.ToLower() + "  " + $zipFileName) | Out-File $shaFile -Encoding ASCII -NoNewline
+
+          # Verify
+          $expected = (Get-Content $shaFile -Raw).Split([char]32)[0].Trim()
+          $actual   = (Get-FileHash -Path $zipFileName -Algorithm SHA256).Hash.ToLower()
+          if ($expected -ne $actual) { throw "Checksum mismatch: expected $expected, actual $actual" }
+          Write-Host "Checksum verified."
+
+          "SHA_PATH=$shaFile" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      # ----------------------------------------------------------------------
+      # 15) Upload as workflow artifacts
+      # ----------------------------------------------------------------------
+      - name: ⬆️ Upload artifacts
+        # uses: actions/upload-artifact@<UPLOAD_ARTIFACT_SHA_FOR_v4>  # <- PIN ME
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssa2-${{ github.ref_name }}
+          path: |
+            src/${{ env.ZIP_PATH }}
+            src/${{ env.SHA_PATH }}
+          if-no-files-found: error
+          retention-days: 90
+
+      # ----------------------------------------------------------------------
+      # 16) Upload to the GitHub Release (public)
+      # ----------------------------------------------------------------------
+      - name: 🚀 Upload release assets
+        # uses: softprops/action-gh-release@<GH_RELEASE_SHA_FOR_v2>  # <- PIN ME
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            src/${{ env.ZIP_PATH }}
+            src/${{ env.SHA_PATH }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ----------------------------------------------------------------------
+      # 17) Final Build summary
+      # ----------------------------------------------------------------------
+      - name: 📊 Final Build summary
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-StrictMode -Version Latest
+          $version = "${{ github.ref_name }}"
+          $zip     = $env:ZIP_PATH
+          $sizeMB  = "{0:N2}" -f ((Get-Item $zip).Length/1MB)
+
+          # Did we include companions?
+          $staging = ".\release-staging"
+          $extra = @( Get-ChildItem $staging -File | Where-Object { $_.Name -notin @("Smart_Stay_Awake_3.exe","Smart_Stay_Awake_3_icon.png","LICENSE") } )
+          # Build companion summary with count
+          $companionSummary = if ($extra.Count -gt 0) {
+              "$($extra.Count) file(s): $($extra.Name -join ', ')"
+          } else {
+              "none"
+          }
+
+          Write-Host "════════ BUILD COMPLETE ✅ ════════" -ForegroundColor Green
+          Write-Host "Version:   $version"
+          Write-Host "TFM:       $env:TFM_NAME"
+          Write-Host "Target:    win-x64"
+          Write-Host "Mode:      Self-Contained + SingleFile + .NET 10"
+          Write-Host "ZIP:       $zip ($sizeMB MB)"
+          Write-Host "License:   LICENSE included"
+          Write-Host "Companions: $companionSummary"
+          Write-Host "Release:   https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          Write-Host "═══════════════════════════════════" -ForegroundColor Green
