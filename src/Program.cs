@@ -213,7 +213,7 @@ namespace Smart_Stay_Awake_3
             Trace.WriteLine("Smart_Stay_Awake_3: Entered BuildHelpText ...");
             var sb = new StringBuilder();
             sb.AppendLine("Usage:");
-            sb.AppendLine("  Smart_Stay_Awake_3.exe [--help] [--verbose] [--icon PATH] (--for DURATION | --until \"YYYY-M-D H:m:s\")");
+            sb.AppendLine("  Smart_Stay_Awake.exe [--help] [--verbose] [--icon PATH] (--for DURATION | --until \"YYYY-M-D H:m:s\")");
             sb.AppendLine();
             sb.AppendLine("Options:");
             sb.AppendLine("  --help");
@@ -221,8 +221,8 @@ namespace Smart_Stay_Awake_3
             sb.AppendLine();
             sb.AppendLine("  --verbose");
             sb.AppendLine("      Enable detailed trace logging to a file.");
-            sb.AppendLine("      Log file created/overwritten alongside \"Smart_Stay_Awake_3.exe\" if that directory is writable,");
-            sb.AppendLine("               otherwise in: \"%LocalAppData%\\Smart_Stay_Awake_3\\Logs\"");
+            sb.AppendLine("      Log file created/overwritten alongside \"Smart_Stay_Awake.exe\" if that directory is writable,");
+            sb.AppendLine("               otherwise in: \"%LocalAppData%\\Smart_Stay_Awake\\Logs\"");
             sb.AppendLine();
             sb.AppendLine("  --icon PATH");
             sb.AppendLine("      Use a specific image file for the window/tray icon.");

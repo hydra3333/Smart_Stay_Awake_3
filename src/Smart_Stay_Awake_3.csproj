@@ -8,7 +8,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Smart_Stay_Awake_3</RootNamespace>
-    <ApplicationIcon>Assets\Smart_Stay_Awake_3_icon.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\Smart_Stay_Awake_icon.ico</ApplicationIcon>
     <PlatformTarget>x64</PlatformTarget>
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -56,8 +56,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\Smart_Stay_Awake_3_icon.ico" />
-    <Content Include="Assets\Smart_Stay_Awake_3_icon.png">
+    <Content Include="Assets\Smart_Stay_Awake_icon.ico" />
+    <Content Include="Assets\Smart_Stay_Awake_icon.png">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -67,9 +67,9 @@
   </ItemGroup>
 
   <ItemGroup>
-	<None Update="Assets\Smart_Stay_Awake_3_icon.png">
+	<None Update="Assets\Smart_Stay_Awake_icon.png">
 	   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	   <Link>Smart_Stay_Awake_3_icon.png</Link>
+	   <Link>Smart_Stay_Awake_icon.png</Link>
 	</None>
   </ItemGroup>
 	
