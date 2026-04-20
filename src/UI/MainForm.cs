@@ -31,7 +31,7 @@ namespace Smart_Stay_Awake_3.UI
 
         // UI containers and controls (added below the image in Module 4)
         // COMMENTED OUT (iteration 2 - removed from UI to match Python layout):
-        // private Label? _lblPrimary;              // "Smart Stay Awake 2"
+        // private Label? _lblPrimary;              // "Smart Stay Awake 3"
         // private Label? _lblSecondary;            // "Ready • No timers armed"
         private Panel? _separator;                  // Thin horizontal line (still used)
         private FlowLayoutPanel? _buttonsRow;       // Buttons: Minimize/Quit
@@ -975,7 +975,7 @@ namespace Smart_Stay_Awake_3.UI
 
                 var lblStatusHint = new Label
                 {
-                    Text = "Right-click the system tray icon for options.",
+                    Text = "Click Help or Right-click System Tray icon for options.",
                     TextAlign = ContentAlignment.MiddleCenter,
                     ForeColor = SystemColors.GrayText,
                     AutoSize = false,
@@ -1084,6 +1084,24 @@ namespace Smart_Stay_Awake_3.UI
                     MinimizeToTray();
                 };
 
+                // --- New Help Button ---
+                var btnHelp = new Button
+                {
+                    Text = "Help",
+                    AutoSize = true,
+                    Font = new Font(SystemFonts.MessageBoxFont?.FontFamily ?? FontFamily.GenericSansSerif, 9.0f, FontStyle.Bold),
+                    //Width = 100, // Matches standard button width in your app
+                    //Height = 30,
+                    Anchor = AnchorStyles.Right, // Right-justified like the Quit button
+                    Margin = new Padding(4, 2, 4, 2)
+                };
+                // Wire it to use the existing modal help logic
+                btnHelp.Click += (s, e) =>
+                {
+                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Button 'Help' clicked => ShowHelpModal");
+                    ShowHelpModal();
+                };
+
                 // Right button: Quit
                 var btnQuit = new Button
                 {
@@ -1107,6 +1125,7 @@ namespace Smart_Stay_Awake_3.UI
                     Margin = new Padding(0, 12, 0, 0)
                 };
                 buttonPanel.Controls.Add(btnMin);
+                buttonPanel.Controls.Add(btnHelp);  // Ensure Help is added BEFORE Quit to appear to its left in a right-anchored layout
                 buttonPanel.Controls.Add(btnQuit);
 
                 // Position buttons on resize/layout
@@ -1114,8 +1133,15 @@ namespace Smart_Stay_Awake_3.UI
                 {
                     if (buttonPanel.Width > 0)
                     {
+                        // 1. Position Minimize on the far left
                         btnMin.Location = new Point(0, 0);
-                        btnQuit.Location = new Point(buttonPanel.Width - btnQuit.Width, 0);
+                        // 2. Position Quit on the far right
+                        int quitX = buttonPanel.Width - btnQuit.Width;
+                        btnQuit.Location = new Point(quitX, 0);
+                        // 3. Position Help to the left of Quit
+                        // (8 pixel gap = btnHelp's right margin of 4 + btnQuit's left margin of 4)
+                        int helpX = quitX - btnHelp.Width - 8;
+                        btnHelp.Location = new Point(helpX, 0);
                     }
                 };
 
@@ -1129,7 +1155,7 @@ namespace Smart_Stay_Awake_3.UI
                 };
                 _buttonsRow.Controls.Add(buttonPanel);
 
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildButtonsRow: 2 buttons added (manual positioning)");
+                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildButtonsRow: 3 buttons added (manual positioning)");
             }
             catch (Exception ex)
             {
