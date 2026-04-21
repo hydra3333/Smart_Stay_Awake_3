@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-AGPL--3.0-green)
 ![Language](https://img.shields.io/badge/language-C%23-239120)
 ![.NET 10 LTS](https://img.shields.io/badge/.NET-10.0_LTS-512BD4)
-![Status: Experimental](https://img.shields.io/badge/status-experimental-orange)
+![Status](https://img.shields.io/badge/status-Initial%20Release-green)
 </h1>
 
 <!--
