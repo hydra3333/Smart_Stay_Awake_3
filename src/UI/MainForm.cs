@@ -31,7 +31,7 @@ namespace Smart_Stay_Awake.UI
 
         // UI containers and controls (added below the image in Module 4)
         // COMMENTED OUT (iteration 2 - removed from UI to match Python layout):
-        // private Label? _lblPrimary;              // "Smart Stay Awake 3"
+        // private Label? _lblPrimary;              // "Smart Stay Awake"
         // private Label? _lblSecondary;            // "Ready • No timers armed"
         private Panel? _separator;                  // Thin horizontal line (still used)
         private FlowLayoutPanel? _buttonsRow;       // Buttons: Minimize/Quit
