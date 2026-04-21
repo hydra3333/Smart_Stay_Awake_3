@@ -1,5 +1,5 @@
 ﻿// ============================================================================
-// Drop-in UI layout diagnostics for Smart_Stay_Awake_3 (no external deps)
+// Drop-in UI layout diagnostics for Smart_Stay_Awake (no external deps)
 // Place in UI/DebugLayout.cs.
 // Call from MainForm at end of OnShown() and/or after you build your fields.
 // ============================================================================
@@ -10,7 +10,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace Smart_Stay_Awake_3.UI
+namespace Smart_Stay_Awake.UI
 {
     internal static class DebugLayout
     {

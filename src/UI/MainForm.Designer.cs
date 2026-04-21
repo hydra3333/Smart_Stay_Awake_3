@@ -1,4 +1,4 @@
-﻿namespace Smart_Stay_Awake_3.UI
+﻿namespace Smart_Stay_Awake.UI
 {
     internal partial class MainForm
     {

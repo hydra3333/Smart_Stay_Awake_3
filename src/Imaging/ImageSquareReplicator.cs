@@ -1,4 +1,4 @@
-﻿// File: src/Smart_Stay_Awake_3/Imaging/ImageSquareReplicator.cs
+﻿// File: src/Smart_Stay_Awake/Imaging/ImageSquareReplicator.cs
 // Purpose: Make a bitmap square by *edge replication* (no solid padding).
 // Strategy:
 //   * Target side = max(width, height)
@@ -14,7 +14,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace Smart_Stay_Awake_3.Imaging
+namespace Smart_Stay_Awake.Imaging
 {
     internal static class ImageSquareReplicator
     {

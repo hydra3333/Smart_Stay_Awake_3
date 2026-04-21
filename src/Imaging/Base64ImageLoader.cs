@@ -1,4 +1,4 @@
-﻿// File: src/Smart_Stay_Awake_3/Imaging/Base64ImageLoader.cs
+﻿// File: src/Smart_Stay_Awake/Imaging/Base64ImageLoader.cs
 // Purpose: Decode an embedded base64 image (PNG/JPG/etc.) into a Bitmap safely.
 // Heavy trace + friendly errors; returns decoupled Bitmap.
 
@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 
-namespace Smart_Stay_Awake_3.Imaging
+namespace Smart_Stay_Awake.Imaging
 {
     internal static class Base64ImageLoader
     {

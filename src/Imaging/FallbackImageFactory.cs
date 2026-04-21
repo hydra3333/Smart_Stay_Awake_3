@@ -1,4 +1,4 @@
-﻿// File: src/Smart_Stay_Awake_3/Imaging/FallbackImageFactory.cs
+﻿// File: src/Smart_Stay_Awake/Imaging/FallbackImageFactory.cs
 // Purpose: Dev-friendly fallback image (distinct “eye over checkerboard”) when no image source is available.
 
 using System;
@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 using static System.Windows.Forms.LinkLabel;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
-namespace Smart_Stay_Awake_3.Imaging
+namespace Smart_Stay_Awake.Imaging
 {
     internal static class FallbackImageFactory
     {

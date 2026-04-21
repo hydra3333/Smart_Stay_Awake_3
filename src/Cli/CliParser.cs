@@ -1,4 +1,4 @@
-﻿// File: src/Smart_Stay_Awake_3/Cli/CliParser.cs
+﻿// File: src/Smart_Stay_Awake/Cli/CliParser.cs
 // Purpose: Parse and validate command-line arguments into CliOptions.
 // Design notes:
 //   * --help is supported (sets CliOptions.ShowHelp = true).
@@ -15,7 +15,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace Smart_Stay_Awake_3
+namespace Smart_Stay_Awake
 {
     /// <summary>
     /// Thrown when command-line parsing or validation fails.
@@ -45,11 +45,11 @@ namespace Smart_Stay_Awake_3
         /// </summary>
         public static CliOptions Parse(string[] args)
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Entered CliParser.Parse ...");
+            Trace.WriteLine("Smart_Stay_Awake: CliParser: Entered CliParser.Parse ...");
             // Raw, unparsed command line (includes exe path)
             string rawCommandLine = Environment.CommandLine ?? string.Empty;
-            Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Raw command line  : " + rawCommandLine);
-            Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Raw arguments only: " + GetRawArgsOnly());
+            Trace.WriteLine("Smart_Stay_Awake: CliParser: Raw command line  : " + rawCommandLine);
+            Trace.WriteLine("Smart_Stay_Awake: CliParser: Raw arguments only: " + GetRawArgsOnly());
             //
             try
             {
@@ -58,7 +58,7 @@ namespace Smart_Stay_Awake_3
                 // -------------------------------------------------------------------------------------
                 // PRE-SCAN (no parsing): detect presence of mutually exclusive --for and --until tokens
                 // -------------------------------------------------------------------------------------
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Start pre-scan for mutually exclusive options");
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: Start pre-scan for mutually exclusive options");
                 bool sawForToken = false;
                 bool sawUntilToken = false;
                 for (int i = 0; i < args.Length; i++)
@@ -78,10 +78,10 @@ namespace Smart_Stay_Awake_3
                 // Enforce mutual exclusivity BEFORE parsing any values
                 if (sawForToken && sawUntilToken)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Pre-scan detected both --for and --until.");
-                    throw new CliParseException("Smart_Stay_Awake_3: CliParser: --for and --until are mutually exclusive; specify only one.");
+                    Trace.WriteLine("Smart_Stay_Awake: CliParser: Pre-scan detected both --for and --until.");
+                    throw new CliParseException("Smart_Stay_Awake: CliParser: --for and --until are mutually exclusive; specify only one.");
                 }
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: End pre-scan (OK).");
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: End pre-scan (OK).");
 
                 // -----------------------------------------------------------------
                 // Parse variables
@@ -102,7 +102,7 @@ namespace Smart_Stay_Awake_3
                 // --for DURATION
                 // --until "YYYY-M-D H:m:s"
                 // --verbose
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Start of main parse loop");
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: Start of main parse loop");
                 for (int i = 0; i < args.Length; i++)
                 {
                     string token = (args[i] ?? string.Empty).Trim();
@@ -124,10 +124,10 @@ namespace Smart_Stay_Awake_3
                     {
                         // Expect a path after --icon
                         if (++i >= args.Length)
-                            throw new CliParseException("Smart_Stay_Awake_3: CliParser: Missing value for --icon. Expected a file path.");
+                            throw new CliParseException("Smart_Stay_Awake: CliParser: Missing value for --icon. Expected a file path.");
                         string rawPath = (args[i] ?? string.Empty).Trim().Trim('"');
                         if (string.IsNullOrWhiteSpace(rawPath))
-                            throw new CliParseException("Smart_Stay_Awake_3: CliParser: Empty path provided for --icon.");
+                            throw new CliParseException("Smart_Stay_Awake: CliParser: Empty path provided for --icon.");
                         string fullPath;
                         try
                         {
@@ -135,28 +135,28 @@ namespace Smart_Stay_Awake_3
                         }
                         catch (Exception ex)
                         {
-                            throw new CliParseException($"Smart_Stay_Awake_3: CliParser: Invalid --icon path: {rawPath}\n{ex.Message}");
+                            throw new CliParseException($"Smart_Stay_Awake: CliParser: Invalid --icon path: {rawPath}\n{ex.Message}");
                         }
                         if (!File.Exists(fullPath))
-                            throw new CliParseException($"Smart_Stay_Awake_3: CliParser: --icon file not found: {fullPath}");
+                            throw new CliParseException($"Smart_Stay_Awake: CliParser: --icon file not found: {fullPath}");
 
                         string ext = Path.GetExtension(fullPath);
                         if (!AppConfig.ALLOWED_ICON_EXTENSIONS.Contains(ext))
-                            throw new CliParseException($"Smart_Stay_Awake_3: CliParser: --icon extension '{ext}' not supported. Allowed: .png .jpg .jpeg .bmp .gif .ico");
+                            throw new CliParseException($"Smart_Stay_Awake: CliParser: --icon extension '{ext}' not supported. Allowed: .png .jpg .jpeg .bmp .gif .ico");
                         iconPath = fullPath;
-                        Trace.WriteLine($"Smart_Stay_Awake_3: CliParser: IconPath accepted: {iconPath}");
+                        Trace.WriteLine($"Smart_Stay_Awake: CliParser: IconPath accepted: {iconPath}");
                         continue;
                     }
                     if (token.Equals("--for", StringComparison.OrdinalIgnoreCase))
                     {
                         if (++i >= args.Length)
-                            throw new CliParseException("Smart_Stay_Awake_3: CliParser: Missing value for --for. Example: --for 1h30m");
+                            throw new CliParseException("Smart_Stay_Awake: CliParser: Missing value for --for. Example: --for 1h30m");
                         string raw = (args[i] ?? string.Empty).Trim().ToLowerInvariant();
                         // Bare number (no unit) means minutes
                         if (IsAllDigits(raw))
                         {
                             if (!int.TryParse(raw, NumberStyles.None, CultureInfo.InvariantCulture, out int mins))
-                                throw new CliParseException($"Smart_Stay_Awake_3: CliParser: --for value '{raw}' is not a valid integer.");
+                                throw new CliParseException($"Smart_Stay_Awake: CliParser: --for value '{raw}' is not a valid integer.");
                             forDuration = TimeSpan.FromMinutes(mins);
                         }
                         else
@@ -166,13 +166,13 @@ namespace Smart_Stay_Awake_3
                         }
                         // Validate bounds
                         ValidateDurationBounds(forDuration.Value);
-                        Trace.WriteLine($"Smart_Stay_Awake_3: CliParser: ForDuration accepted: {forDuration}");
+                        Trace.WriteLine($"Smart_Stay_Awake: CliParser: ForDuration accepted: {forDuration}");
                         continue;
                     }
                     if (token.Equals("--until", StringComparison.OrdinalIgnoreCase))
                     {
                         if (++i >= args.Length)
-                            throw new CliParseException("Smart_Stay_Awake_3: CliParser: Missing value for --until. Example: --until \"2025-1-2 3:4:5\"");
+                            throw new CliParseException("Smart_Stay_Awake: CliParser: Missing value for --until. Example: --until \"2025-1-2 3:4:5\"");
                         string raw = (args[i] ?? string.Empty).Trim().Trim('"', '\''); // relaxed quotes
                         var parsed = ParseUntilLocalRelaxed(raw);
 
@@ -185,21 +185,21 @@ namespace Smart_Stay_Awake_3
                         int deltaSeconds = (int)(targetEpoch - nowCeil);
 
                         if (deltaSeconds < AppConfig.MIN_AUTO_QUIT_SECONDS)
-                            throw new CliParseException($"Smart_Stay_Awake_3: CliParser: --until must be at least {AppConfig.MIN_AUTO_QUIT_SECONDS} seconds in the future (got {deltaSeconds}s).");
+                            throw new CliParseException($"Smart_Stay_Awake: CliParser: --until must be at least {AppConfig.MIN_AUTO_QUIT_SECONDS} seconds in the future (got {deltaSeconds}s).");
                         if (deltaSeconds > AppConfig.MAX_AUTO_QUIT_SECONDS)
-                            throw new CliParseException($"Smart_Stay_Awake_3: CliParser: --until must be within {AppConfig.MAX_AUTO_QUIT_SECONDS} seconds from now (~365 days).");
+                            throw new CliParseException($"Smart_Stay_Awake: CliParser: --until must be within {AppConfig.MAX_AUTO_QUIT_SECONDS} seconds from now (~365 days).");
 
                         untilLocal = parsed;
                         untilTargetEpoch = targetEpoch;  // Store for two-stage ceiling
 
-                        Trace.WriteLine($"Smart_Stay_Awake_3: CliParser: UntilLocal accepted: {untilLocal:yyyy-MM-dd HH:mm:ss}");
-                        Trace.WriteLine($"Smart_Stay_Awake_3: CliParser: UntilTargetEpoch (Stage 1): {targetEpoch:F1} (delta={deltaSeconds}s)");
+                        Trace.WriteLine($"Smart_Stay_Awake: CliParser: UntilLocal accepted: {untilLocal:yyyy-MM-dd HH:mm:ss}");
+                        Trace.WriteLine($"Smart_Stay_Awake: CliParser: UntilTargetEpoch (Stage 1): {targetEpoch:F1} (delta={deltaSeconds}s)");
                         continue;
                     }
                     // Unknown token -> friendly error
-                    throw new CliParseException($"Smart_Stay_Awake_3: CliParser: Unknown argument: {token}");
+                    throw new CliParseException($"Smart_Stay_Awake: CliParser: Unknown argument: {token}");
                 }
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: End of main parse loop");
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: End of main parse loop");
 
                 // -----------------------------------------------------------------
                 // Build result
@@ -213,20 +213,20 @@ namespace Smart_Stay_Awake_3
                     UntilTargetEpoch = untilTargetEpoch,
                     ShowHelp = showHelp
                 };
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Exiting CliParser.Parse (success).");
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: Exiting CliParser.Parse (success).");
                 return result;      // of CliOptions
             }
             catch (CliParseException)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Caught CliParseException in CliParser.Parse.");
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Exiting CliParser.Parse (error).");
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: Caught CliParseException in CliParser.Parse.");
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: Exiting CliParser.Parse (error).");
                 throw;
             }
             catch (Exception ex)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Caught unexpected exception in CliParser.Parse: " + ex);
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Exiting CliParser.Parse (error).");
-                throw new CliParseException("Smart_Stay_Awake_3: CliParser: Unexpected error while parsing arguments: " + ex.Message);
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: Caught unexpected exception in CliParser.Parse: " + ex);
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: Exiting CliParser.Parse (error).");
+                throw new CliParseException("Smart_Stay_Awake: CliParser: Unexpected error while parsing arguments: " + ex.Message);
             }
         }
 
@@ -240,7 +240,7 @@ namespace Smart_Stay_Awake_3
         //
         private static TimeSpan ParseDuration(string raw)
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Start of ParseDuration TRY");
+            Trace.WriteLine("Smart_Stay_Awake: CliParser: Start of ParseDuration TRY");
             try
             {
                 long days = 0, hours = 0, minutes = 0, seconds = 0;
@@ -253,7 +253,7 @@ namespace Smart_Stay_Awake_3
                 }
                 // If regex found nothing, the format is invalid.
                 if (days == 0 && hours == 0 && minutes == 0 && seconds == 0)
-                    throw new CliParseException($"Smart_Stay_Awake_3: CliParser: Invalid --for format '{raw}'. Examples: 3d4h5s, 1h30m, 90m, 3600s");
+                    throw new CliParseException($"Smart_Stay_Awake: CliParser: Invalid --for format '{raw}'. Examples: 3d4h5s, 1h30m, 90m, 3600s");
                 // Build a TimeSpan safely (check for overflow)
                 try
                 {
@@ -261,25 +261,25 @@ namespace Smart_Stay_Awake_3
                            + TimeSpan.FromHours(hours)
                            + TimeSpan.FromMinutes(minutes)
                            + TimeSpan.FromSeconds(seconds);
-                    Trace.WriteLine("Smart_Stay_Awake_3: CliParser: End of ParseDuration TRY (success)");
+                    Trace.WriteLine("Smart_Stay_Awake: CliParser: End of ParseDuration TRY (success)");
                     return ts;
                 }
                 catch (OverflowException)
                 {
-                    throw new CliParseException("Smart_Stay_Awake_3: CliParser: --for duration is too large.");
+                    throw new CliParseException("Smart_Stay_Awake: CliParser: --for duration is too large.");
                 }
             }
             catch (CliParseException)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Caught   ParseDuration CATCH (CliParseException)");
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: End of   ParseDuration TRY");
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: Caught   ParseDuration CATCH (CliParseException)");
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: End of   ParseDuration TRY");
                 throw;
             }
             catch (Exception ex)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: Caught   ParseDuration CATCH (Unexpected): " + ex);
-                Trace.WriteLine("Smart_Stay_Awake_3: CliParser: End of   ParseDuration TRY");
-                throw new CliParseException("Smart_Stay_Awake_3: CliParser: Unexpected error parsing --for: " + ex.Message);
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: Caught   ParseDuration CATCH (Unexpected): " + ex);
+                Trace.WriteLine("Smart_Stay_Awake: CliParser: End of   ParseDuration TRY");
+                throw new CliParseException("Smart_Stay_Awake: CliParser: Unexpected error parsing --for: " + ex.Message);
             }
         }
         //
@@ -287,9 +287,9 @@ namespace Smart_Stay_Awake_3
         {
             double secs = value.TotalSeconds;
             if (secs < AppConfig.MIN_AUTO_QUIT_SECONDS)
-                throw new CliParseException($"Smart_Stay_Awake_3: CliParser: --for must be at least {AppConfig.MIN_AUTO_QUIT_SECONDS} seconds.");
+                throw new CliParseException($"Smart_Stay_Awake: CliParser: --for must be at least {AppConfig.MIN_AUTO_QUIT_SECONDS} seconds.");
             if (secs > AppConfig.MAX_AUTO_QUIT_SECONDS)
-                throw new CliParseException($"Smart_Stay_Awake_3: CliParser: --for must be <= {AppConfig.MAX_AUTO_QUIT_SECONDS} seconds (~365 days).");
+                throw new CliParseException($"Smart_Stay_Awake: CliParser: --for must be <= {AppConfig.MAX_AUTO_QUIT_SECONDS} seconds (~365 days).");
         }
         //
         private static DateTime ParseUntilLocalRelaxed(string raw)
@@ -316,7 +316,7 @@ namespace Smart_Stay_Awake_3
             // Fallback: last resort general parse (still local)
             if (DateTime.TryParse(compressed, CultureInfo.CurrentCulture, DateTimeStyles.AssumeLocal, out dt))
                 return dt;
-            throw new CliParseException($"Smart_Stay_Awake_3: CliParser: --until value '{raw}' could not be parsed as a local 24-hour timestamp (yyyy-M-d H:m:s).");
+            throw new CliParseException($"Smart_Stay_Awake: CliParser: --until value '{raw}' could not be parsed as a local 24-hour timestamp (yyyy-M-d H:m:s).");
         }
         private static string GetRawArgsOnly()
         {

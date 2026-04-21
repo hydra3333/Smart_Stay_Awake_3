@@ -1,4 +1,4 @@
-﻿// File: src/Smart_Stay_Awake_3/Program.cs
+﻿// File: src/Smart_Stay_Awake/Program.cs
 // Purpose: Entry point. Initialize WinForms defaults, parse CLI, help, configure tracing, build AppState, run MainForm.
 
 using System;
@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
-namespace Smart_Stay_Awake_3
+namespace Smart_Stay_Awake
 {
     internal static class Program
     {
@@ -43,17 +43,17 @@ namespace Smart_Stay_Awake_3
 
             try
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: Main: Entered Program.Main ...");
+                Trace.WriteLine("Smart_Stay_Awake: Main: Entered Program.Main ...");
 
                 // 1) Parse CLI -> may throw CliParseException with a friendly message.
-                Trace.WriteLine("Smart_Stay_Awake_3: Main: Start of CLI parse TRY");
+                Trace.WriteLine("Smart_Stay_Awake: Main: Start of CLI parse TRY");
                 CliOptions opts = CliParser.Parse(args);
-                Trace.WriteLine("Smart_Stay_Awake_3: Main: End of   CLI parse TRY (success)");
+                Trace.WriteLine("Smart_Stay_Awake: Main: End of   CLI parse TRY (success)");
 
                 // 1a) If --help was requested, print usage and exit(0) BEFORE any other work.
                 if (opts.ShowHelp)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: Main: Help requested via CLI. Showing usage and exiting.");
+                    Trace.WriteLine("Smart_Stay_Awake: Main: Help requested via CLI. Showing usage and exiting.");
                     ShowHelpAndExit();
                     return; // (unreached; Environment.Exit inside)
                 }
@@ -63,7 +63,7 @@ namespace Smart_Stay_Awake_3
                 string? logFullPath = null;
 
                 // When Tracing enabled, setup Listeners
-                Trace.WriteLine("Smart_Stay_Awake_3: Main: Start of tracing config TRY");
+                Trace.WriteLine("Smart_Stay_Awake: Main: Start of tracing config TRY");
                 try
                 {
                     Trace.Listeners.Clear(); // always clear first; avoid OutputDebugString noise
@@ -128,28 +128,28 @@ namespace Smart_Stay_Awake_3
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Warning);
                 }
-                Trace.WriteLine("Smart_Stay_Awake_3: Main: End of   tracing config TRY");
+                Trace.WriteLine("Smart_Stay_Awake: Main: End of   tracing config TRY");
 
                 // 3) Create AppState (collects version, options, trace flags) (currently unused)
                 AppState mainApplicationState = AppState.Create(opts, enableTrace, logFullPath);
 
                 // 4) Run the MainForm (inject application state)
-                Trace.WriteLine("Smart_Stay_Awake_3: Main: Starting UI.MainForm ...");
+                Trace.WriteLine("Smart_Stay_Awake: Main: Starting UI.MainForm ...");
                 Application.Run(new UI.MainForm(mainApplicationState));
-                Trace.WriteLine("Smart_Stay_Awake_3: Main: UI.MainForm exited normally.");
-                Trace.WriteLine("Smart_Stay_Awake_3: Main: Exiting Program.Main (success).");
+                Trace.WriteLine("Smart_Stay_Awake: Main: UI.MainForm exited normally.");
+                Trace.WriteLine("Smart_Stay_Awake: Main: Exiting Program.Main (success).");
             }
             catch (CliParseException ex)
             {
                 // Known, friendly CLI error (bad args, etc.)
-                Trace.WriteLine("Smart_Stay_Awake_3: Main: Caught CliParseException in Program.Main.");
-                FatalHelper.Fatal("Smart_Stay_Awake_3: Main: Command-line error:\n" + ex.Message, exitCode: 2);
+                Trace.WriteLine("Smart_Stay_Awake: Main: Caught CliParseException in Program.Main.");
+                FatalHelper.Fatal("Smart_Stay_Awake: Main: Command-line error:\n" + ex.Message, exitCode: 2);
             }
             catch (Exception ex)
             {
                 // Unexpected, catch-all path.
-                Trace.WriteLine("Smart_Stay_Awake_3: Main: Caught unexpected exception in Program.Main: " + ex);
-                FatalHelper.Fatal("Smart_Stay_Awake_3: Main: Unexpected error: " + ex.Message, exitCode: 99);
+                Trace.WriteLine("Smart_Stay_Awake: Main: Caught unexpected exception in Program.Main: " + ex);
+                FatalHelper.Fatal("Smart_Stay_Awake: Main: Unexpected error: " + ex.Message, exitCode: 99);
             }
         }
 
@@ -160,8 +160,8 @@ namespace Smart_Stay_Awake_3
         /// </summary>
         private static void ShowHelpAndExit()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: Entered ShowHelpAndExit ...");
-            Trace.WriteLine("Smart_Stay_Awake_3: ShowHelpAndExit: Help requested via CLI. Showing usage and exiting.");
+            Trace.WriteLine("Smart_Stay_Awake: Entered ShowHelpAndExit ...");
+            Trace.WriteLine("Smart_Stay_Awake: ShowHelpAndExit: Help requested via CLI. Showing usage and exiting.");
 
             string help = HelpTextBuilder.BuildHelpText();
 
@@ -169,7 +169,7 @@ namespace Smart_Stay_Awake_3
             try { Trace.WriteLine(help); } catch { /* ignore */ }
 
             // Show a modal dialog (if launched by double-click)
-            Trace.WriteLine("Smart_Stay_Awake_3: ShowHelpAndExit: about to show a MessageBox with help");
+            Trace.WriteLine("Smart_Stay_Awake: ShowHelpAndExit: about to show a MessageBox with help");
             try
             {
                 MessageBox.Show(help, AppConfig.APP_DISPLAY_NAME + " - Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -177,7 +177,7 @@ namespace Smart_Stay_Awake_3
             catch { /* ignore */ }
 
 
-            Trace.WriteLine("Smart_Stay_Awake_3: Exiting ShowHelpAndExit ...");
+            Trace.WriteLine("Smart_Stay_Awake: Exiting ShowHelpAndExit ...");
             try { Environment.Exit(0); } catch { /* ignore */ }
         }
 
@@ -210,7 +210,7 @@ namespace Smart_Stay_Awake_3
         /// <returns>Multi-line help text with usage, options, and examples.</returns>
         public static string BuildHelpText()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: Entered BuildHelpText ...");
+            Trace.WriteLine("Smart_Stay_Awake: Entered BuildHelpText ...");
             var sb = new StringBuilder();
             sb.AppendLine("Usage:");
             sb.AppendLine("  Smart_Stay_Awake.exe [--help] [--verbose] [--icon PATH] (--for DURATION | --until \"YYYY-M-D H:m:s\")");
@@ -245,7 +245,7 @@ namespace Smart_Stay_Awake_3
             sb.AppendLine("        \"2025-1-2 3:2:1\"");
             sb.AppendLine($"      Bounds: at least {AppConfig.MIN_AUTO_QUIT_SECONDS}s ahead, at most {AppConfig.MAX_AUTO_QUIT_SECONDS}s from now.");
             sb.AppendLine();
-            Trace.WriteLine("Smart_Stay_Awake_3: Exiting BuildHelpText");
+            Trace.WriteLine("Smart_Stay_Awake: Exiting BuildHelpText");
             return sb.ToString();
         }
     }

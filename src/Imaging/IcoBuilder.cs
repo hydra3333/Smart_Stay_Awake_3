@@ -1,4 +1,4 @@
-﻿// File: src/Smart_Stay_Awake_3/Imaging/IcoBuilder.cs
+﻿// File: src/Smart_Stay_Awake/Imaging/IcoBuilder.cs
 // Purpose: Build a multi-size .ICO in memory from a single *square* bitmap by producing PNG frames.
 // Sizes default: 16,20,24,32,40,48,64,128,256 (configurable).
 // Implementation:
@@ -12,7 +12,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 
-namespace Smart_Stay_Awake_3.Imaging
+namespace Smart_Stay_Awake.Imaging
 {
     internal static class IcoBuilder
     {

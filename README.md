@@ -1,6 +1,6 @@
 ﻿<h1 align="center">
-  <img src="./Smart_Stay_Awake_3_icon.png" width="256" alt="Smart Stay Awake icon">
-  <br>Smart_Stay_Awake_3
+  <img src="./Smart_Stay_Awake_icon.png" width="256" alt="Smart Stay Awake icon">
+  <br>Smart_Stay_Awake
 
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-lightgrey)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-green)
@@ -53,7 +53,7 @@ delivering responsive feedback without performance cost.
 
 ## What it does
 
-- While Smart\_Stay\_Awake\_3 runs, it requests the OS to **not sleep/hibernate**. Your **display monitor can still sleep** normally if your power plan allows it.
+- While Smart\_Stay\_Awake runs, it requests the OS to **not sleep/hibernate**. Your **display monitor can still sleep** normally if your power plan allows it.
 - When you **quit** (or when an **auto-quit** timer fires), the app **releases** the request and your PC can sleep again.
 - If the app process is terminated, the OS automatically detects it and releases requests for that process and your PC can sleep again.
 - A small **windows system-tray icon** provides **Show Window** and **Quit**.
@@ -103,7 +103,7 @@ delivering responsive feedback without performance cost.
   - Quit
   
 <h3 align="left">
-  <img src="./Smart_Stay_Awake_3_main_window.jpg" width="512" alt="Smart Stay Awake main window">
+  <img src="./Smart_Stay_Awake_main_window.jpg" width="512" alt="Smart Stay Awake main window">
 </h3>
 
 ---
@@ -146,20 +146,20 @@ delivering responsive feedback without performance cost.
 
 **Double-click to run indefinitely:**
 ```cmd
-Smart_Stay_Awake_3.exe
+Smart_Stay_Awake.exe
 ```
 The app starts in Indefinite mode and runs until you quit it manually or the system restarts.
 
 **Run for a specific duration:**
 ```cmd
-Smart_Stay_Awake_3.exe --for 2h
-Smart_Stay_Awake_3.exe --for 90m
-Smart_Stay_Awake_3.exe --for 3d4h30m15s
+Smart_Stay_Awake.exe --for 2h
+Smart_Stay_Awake.exe --for 90m
+Smart_Stay_Awake.exe --for 3d4h30m15s
 ```
 
 **Run until a specific date/time:**
 ```cmd
-Smart_Stay_Awake_3.exe --until "2025-10-04 23:59:59"
+Smart_Stay_Awake.exe --until "2025-10-04 23:59:59"
 ```
 
 ### Parameter formats explained
@@ -177,10 +177,10 @@ Keep the system awake for a fixed duration, then quit gracefully.
 
 **Examples:**
 ```cmd
-Smart_Stay_Awake_3.exe --for 2h          # 2 hours
-Smart_Stay_Awake_3.exe --for 45m         # 45 minutes
-Smart_Stay_Awake_3.exe --for 90          # 90 minutes (bare number)
-Smart_Stay_Awake_3.exe --for 3d4h5s      # 3 days, 4 hours, 5 seconds
+Smart_Stay_Awake.exe --for 2h          # 2 hours
+Smart_Stay_Awake.exe --for 45m         # 45 minutes
+Smart_Stay_Awake.exe --for 90          # 90 minutes (bare number)
+Smart_Stay_Awake.exe --for 3d4h5s      # 3 days, 4 hours, 5 seconds
 ```
 
 #### `--until <datetime>`
@@ -197,9 +197,9 @@ Keep the system awake until a specific local date/time, then quit gracefully.
 
 **Examples:**
 ```cmd
-Smart_Stay_Awake_3.exe --until "2025-10-04 23:30:00"
-Smart_Stay_Awake_3.exe --until "2025-12-31 23:59:59"
-Smart_Stay_Awake_3.exe --until "2025-1-2 3:2:1"        # Relaxed format
+Smart_Stay_Awake.exe --until "2025-10-04 23:30:00"
+Smart_Stay_Awake.exe --until "2025-12-31 23:59:59"
+Smart_Stay_Awake.exe --until "2025-1-2 3:2:1"        # Relaxed format
 ```
 
 #### Mutual Exclusivity
@@ -232,7 +232,7 @@ Smart_Stay_Awake_3.exe --until "2025-1-2 3:2:1"        # Relaxed format
 When Smart Stay Awake 3 is running, the Windows (Admin) command `powercfg /requests` shows, for example:
 ```
 SYSTEM:
-[PROCESS] \Device\HarddiskVolume3\Path\To\Smart_Stay_Awake_3.exe
+[PROCESS] \Device\HarddiskVolume3\Path\To\Smart_Stay_Awake.exe
 Smart Stay Awake 3: Preventing automatic sleep & hibernation (display monitor may sleep) as requested (auto-quit at 2025-10-04 15:30:00).
 ```
 
@@ -267,7 +267,7 @@ To check your Windows version:
 
 1. Download the latest release ZIP from the [Releases](../../releases) page
 2. Extract all files to a folder of your choice:
-   - `Smart_Stay_Awake_3.exe`
+   - `Smart_Stay_Awake.exe`
    - `Microsoft.Windows.CsWin32.dll`
    - `System.Memory.dll`
    - `System.Runtime.CompilerServices.Unsafe.dll`
@@ -275,7 +275,7 @@ To check your Windows version:
    - `Assets/` folder (contains icon resources)
    - etc
 3. **Keep all extracted files together** in the same folder
-4. Run `Smart_Stay_Awake_3.exe` as described under **Basic Usage** above.
+4. Run `Smart_Stay_Awake.exe` as described under **Basic Usage** above.
 
 **Important:** All items (exe + DLLs + Assets folder) **must** remain in the same directory
 for the application to work.
@@ -297,13 +297,13 @@ for the application to work.
 
 **Clone the repository:**
 ```cmd
-git clone https://github.com/yourusername/Smart_Stay_Awake_3.git
-cd Smart_Stay_Awake_3
+git clone https://github.com/yourusername/Smart_Stay_Awake.git
+cd Smart_Stay_Awake
 ```
 
 **Open in Visual Studio:**
 ```cmd
-start Smart_Stay_Awake_3.sln
+start Smart_Stay_Awake.sln
 ```
 
 **Restore NuGet packages:**
@@ -357,8 +357,8 @@ remain open source and benefit the community, even when used in network/server e
 - Verify Windows 10 version 2004+ (run `winver` to check)
 - Try running from Command Prompt to see error messages:
   ```cmd
-  cd C:\Path\To\Smart_Stay_Awake_3
-  Smart_Stay_Awake_3.exe
+  cd C:\Path\To\Smart_Stay_Awake
+  Smart_Stay_Awake.exe
   ```
 
 **No tray icon appears:**
@@ -366,7 +366,7 @@ remain open source and benefit the community, even when used in network/server e
 - Enable "Always show all icons in the taskbar" in Windows settings:
   1. Right-click taskbar → Taskbar settings
   2. Scroll to "System tray" → "Select which icons appear on the taskbar"
-  3. Enable Smart_Stay_Awake_3 or toggle "Always show all icons"
+  3. Enable Smart_Stay_Awake or toggle "Always show all icons"
 
 **System still sleeps:**
 - Verify the app is running: Check `powercfg /requests` in Command Prompt
@@ -393,7 +393,7 @@ remain open source and benefit the community, even when used in network/server e
 - The application writes trace logs to the Windows Event Viewer (Application log)
 - You can also run the app from Command Prompt with debug output:
   ```cmd
-  Smart_Stay_Awake_3.exe --verbose
+  Smart_Stay_Awake.exe --verbose
   ```
   (if --verbose mode is implemented in your version)
 
@@ -409,13 +409,13 @@ powercfg /requests
 **Look for output like:**
 ```
 SYSTEM:
-[PROCESS] \Device\HarddiskVolume3\Path\To\Smart_Stay_Awake_3.exe
+[PROCESS] \Device\HarddiskVolume3\Path\To\Smart_Stay_Awake.exe
 Smart Stay Awake 3: Preventing automatic sleep & hibernation (display monitor may sleep) as requested (indefinitely).
 ```
 or
 ```
 SYSTEM:
-[PROCESS] \Device\HarddiskVolume3\Path\To\Smart_Stay_Awake_3.exe
+[PROCESS] \Device\HarddiskVolume3\Path\To\Smart_Stay_Awake.exe
 Smart Stay Awake 3: Preventing automatic sleep & hibernation (display monitor may sleep) as requested ( auto-quit a yyyy-MM-dd hh:mm:ss ).
 ```
 

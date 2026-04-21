@@ -1,4 +1,4 @@
-﻿using Smart_Stay_Awake_3.Imaging;
+﻿using Smart_Stay_Awake.Imaging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.LinkLabel;
 
-namespace Smart_Stay_Awake_3.UI
+namespace Smart_Stay_Awake.UI
 {
     // Accessibility matches internal AppState to avoid CS0051.
     internal partial class MainForm : Form
@@ -68,7 +68,7 @@ namespace Smart_Stay_Awake_3.UI
         // Constructor is lightweight: build controls, wire events, set fixed window policy.
         internal MainForm(AppState state)
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Entered MainForm ctor ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Entered MainForm ctor ...");
             _state = state ?? throw new ArgumentNullException(nameof(state));
 
             InitializeComponent(); // designer baseline: AutoScaleMode=Dpi, etc.
@@ -94,12 +94,12 @@ namespace Smart_Stay_Awake_3.UI
             // Wire tray events to unified handlers
             _tray.ShowRequested += (s, e) =>
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Tray.ShowRequested => RestoreFromTray");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Tray.ShowRequested => RestoreFromTray");
                 RestoreFromTray();
             };
             _tray.QuitRequested += (s, e) =>
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Tray.QuitRequested => QuitApplication");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Tray.QuitRequested => QuitApplication");
                 QuitApplication("Tray.Quit");
             };
 
@@ -113,7 +113,7 @@ namespace Smart_Stay_Awake_3.UI
             this.Controls.Add(_picture);
 
             Trace.WriteLine($"UI.MainForm: Using TraceEnabled={_state.TraceEnabled}");
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Exiting MainForm ctor.");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Exiting MainForm ctor.");
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace Smart_Stay_Awake_3.UI
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Entered.");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Entered.");
 
             // Load and prepare image (sets PictureBox.Image and resizes form to image only)
             TryLoadPrepareAndApplyImageAndIcon();
@@ -139,18 +139,18 @@ namespace Smart_Stay_Awake_3.UI
             // This blocks system sleep/hibernation while app is running.
             // Display monitor sleep is still allowed (ES_AWAYMODE_REQUIRED permits this).
             // CRITICAL: If arming fails, the app's entire purpose is defeated - this is FATAL.
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Arming keep-awake ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Arming keep-awake ...");
             bool keepAwakeSuccess = PowerManagement.KeepAwakeManager.Arm(_state);
             if (keepAwakeSuccess)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Keep-awake armed successfully");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: OnShown: System sleep/hibernation now BLOCKED (IsArmed={PowerManagement.KeepAwakeManager.IsArmed})");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Keep-awake armed successfully");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: OnShown: System sleep/hibernation now BLOCKED (IsArmed={PowerManagement.KeepAwakeManager.IsArmed})");
             }
             else
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: FATAL - FAILED to arm keep-awake (SetThreadExecutionState failed)");
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: FATAL - System sleep/hibernation NOT blocked (keep-awake did not activate)");
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: FATAL - App purpose is defeated, cannot continue");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: FATAL - FAILED to arm keep-awake (SetThreadExecutionState failed)");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: FATAL - System sleep/hibernation NOT blocked (keep-awake did not activate)");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: FATAL - App purpose is defeated, cannot continue");
 
                 // Fatal error: app cannot fulfill its purpose
                 FatalHelper.Fatal(
@@ -171,8 +171,8 @@ namespace Smart_Stay_Awake_3.UI
             // Only arm timers if we're in a timed mode (ForDuration or UntilTimestamp)
             if (_state.Mode != PlannedMode.Indefinite)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Timed mode detected, arming timers...");
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Mode=" + _state.Mode);
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Timed mode detected, arming timers...");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Mode=" + _state.Mode);
 
                 // Calculate target epoch (two-stage ceiling - Stage 2)
                 double targetEpoch = 0;
@@ -184,24 +184,24 @@ namespace Smart_Stay_Awake_3.UI
                     // double nowCeil = Math.Ceiling(Time.TimezoneHelpers.GetCurrentEpochSeconds());
                     // double durationSeconds = _state.PlannedTotal.Value.TotalSeconds;
                     // targetEpoch = nowCeil + durationSeconds;
-                    // Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: --for mode: nowCeil=" + nowCeil.ToString("F1") + ", duration=" + durationSeconds.ToString("F1") + "s, targetEpoch=" + targetEpoch.ToString("F1"));
+                    // Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: --for mode: nowCeil=" + nowCeil.ToString("F1") + ", duration=" + durationSeconds.ToString("F1") + "s, targetEpoch=" + targetEpoch.ToString("F1"));
                     // CORRECTED CODE:
                     double now2 = Time.TimezoneHelpers.GetCurrentEpochSeconds();
                     double durationSeconds = _state.PlannedTotal.Value.TotalSeconds;
                     targetEpoch = now2 + durationSeconds;
                     hasValidTarget = true;
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: --for mode: now=" + now2.ToString("F1") + ", duration=" + durationSeconds.ToString("F1") + "s, targetEpoch=" + targetEpoch.ToString("F1"));
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: --for mode: now=" + now2.ToString("F1") + ", duration=" + durationSeconds.ToString("F1") + "s, targetEpoch=" + targetEpoch.ToString("F1"));
                 }
                 else if (_state.Mode == PlannedMode.UntilTimestamp && _state.Options.UntilTargetEpoch.HasValue)
                 {
                     // --until: Use pre-calculated epoch from CLI parser (Stage 1)
                     targetEpoch = _state.Options.UntilTargetEpoch.Value;
                     hasValidTarget = true;
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: --until mode: targetEpoch=" + targetEpoch.ToString("F1") + " (from CLI Stage 1)");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: --until mode: targetEpoch=" + targetEpoch.ToString("F1") + " (from CLI Stage 1)");
                 }
                 else
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: ERROR - Timed mode but no duration/epoch available, skipping timers");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: ERROR - Timed mode but no duration/epoch available, skipping timers");
                 }
 
                 // Only proceed if we have a valid target
@@ -210,16 +210,16 @@ namespace Smart_Stay_Awake_3.UI
                     // Re-calculate seconds from NOW to target (accounts for startup overhead - Stage 2)
                     // double nowCeil2 = Math.Ceiling(Time.TimezoneHelpers.GetCurrentEpochSeconds());
                     // int finalSeconds = (int)Math.Ceiling(targetEpoch - nowCeil2);
-                    // Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Two-stage ceiling Stage 2: nowCeil=" + nowCeil2.ToString("F1") + ", finalSeconds=" + finalSeconds + "s");
+                    // Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Two-stage ceiling Stage 2: nowCeil=" + nowCeil2.ToString("F1") + ", finalSeconds=" + finalSeconds + "s");
                     // CORRECTED CODE:
                     double now2 = Time.TimezoneHelpers.GetCurrentEpochSeconds();
                     int finalSeconds = (int)Math.Ceiling(targetEpoch - now2);
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Two-stage ceiling Stage 2: now=" + now2.ToString("F1") + ", finalSeconds=" + finalSeconds + "s");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Two-stage ceiling Stage 2: now=" + now2.ToString("F1") + ", finalSeconds=" + finalSeconds + "s");
 
                     if (finalSeconds <= 0)
                     {
                         // Target already passed, quit immediately
-                        Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: WARNING - Target time already passed (finalSeconds=" + finalSeconds + "), quitting immediately");
+                        Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: WARNING - Target time already passed (finalSeconds=" + finalSeconds + "), quitting immediately");
                         QuitApplication("Timer.AlreadyExpired");
                         return;
                     }
@@ -227,23 +227,23 @@ namespace Smart_Stay_Awake_3.UI
                     // Set monotonic deadline for countdown calculations (immune to clock changes)
                     long monotonicNow = Stopwatch.GetTimestamp();
                     _autoQuitDeadlineTicks = monotonicNow + ((long)finalSeconds * Stopwatch.Frequency);
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Monotonic deadline set: nowTicks=" + monotonicNow + ", deadlineTicks=" + _autoQuitDeadlineTicks);
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Monotonic deadline set: nowTicks=" + monotonicNow + ", deadlineTicks=" + _autoQuitDeadlineTicks);
 
                     // Set wall-clock ETA for display (human-readable)
                     _autoQuitWallClockEta = DateTime.Now.AddSeconds(finalSeconds);
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Wall-clock ETA: " + _autoQuitWallClockEta.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Wall-clock ETA: " + _autoQuitWallClockEta.Value.ToString("yyyy-MM-dd HH:mm:ss"));
 
                     // Update "Auto-quit at" field (static, set once)
                     if (_fldUntil != null)
                     {
                         _fldUntil.Text = _autoQuitWallClockEta.Value.ToString("yyyy-MM-dd HH:mm:ss");
-                        Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: _fldUntil updated: " + _fldUntil.Text);
+                        Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: _fldUntil updated: " + _fldUntil.Text);
                     }
 
                     // Arm auto-quit timer (one-shot, fires once at deadline)
                     int finalMilliseconds = finalSeconds * 1000;
                     _autoQuitTimer = new System.Threading.Timer(OnAutoQuitCallback, null, finalMilliseconds, System.Threading.Timeout.Infinite);
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Auto-quit timer armed: will fire in " + finalSeconds + "s (" + finalMilliseconds + "ms)");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Auto-quit timer armed: will fire in " + finalSeconds + "s (" + finalMilliseconds + "ms)");
 
                     // Arm countdown display timer (adaptive cadence, reschedules itself)
                     _countdownTimer = new System.Windows.Forms.Timer();
@@ -256,15 +256,15 @@ namespace Smart_Stay_Awake_3.UI
 
                     // Update fields immediately (don't wait for first tick)
                     UpdateCountdownFields();
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Countdown fields initialized immediately");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Countdown fields initialized immediately");
 
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Countdown timer armed: initial interval=" + initialIntervalMs + "ms");
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Timers armed successfully");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Countdown timer armed: initial interval=" + initialIntervalMs + "ms");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Timers armed successfully");
                 }
             }
             else
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Indefinite mode, no timers needed");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Indefinite mode, no timers needed");
             }
 
             //------------------------------------
@@ -278,22 +278,22 @@ namespace Smart_Stay_Awake_3.UI
             //------------------------------------
             //------------------------------------
 
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnShown: Exiting.");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnShown: Exiting.");
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm_Load: Entered MainForm_Load ...");
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm_Load: Exiting MainForm_Load ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm_Load: Entered MainForm_Load ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm_Load: Exiting MainForm_Load ...");
         }
 
         // Dispose tray in FormClosed (no duplicate Dispose override).
         private void MainForm_FormClosed(object? sender, FormClosedEventArgs e)
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Entered MainForm_FormClosed ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Entered MainForm_FormClosed ...");
             try { _tray?.Dispose(); _tray = null; }
             catch (Exception ex) { Trace.WriteLine("UI.MainForm: Tray dispose error: " + ex); }
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Exiting MainForm_FormClosed ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Exiting MainForm_FormClosed ...");
         }
 
         // =====================================================================
@@ -306,12 +306,12 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         private void RestoreFromTray()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Entered RestoreFromTray ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Entered RestoreFromTray ...");
             try
             {
                 if (_isClosing)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: RestoreFromTray: Already closing; ignoring.");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: RestoreFromTray: Already closing; ignoring.");
                     return;
                 }
 
@@ -325,20 +325,20 @@ namespace Smart_Stay_Awake_3.UI
                 if (_tray != null)
                 {
                     _tray.Hide();
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: RestoreFromTray: Tray icon hidden");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: RestoreFromTray: Tray icon hidden");
                 }
 
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: RestoreFromTray: Window restored and activated");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: RestoreFromTray: Window restored and activated");
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: RestoreFromTray FAILED: {ex.GetType().Name}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: RestoreFromTray error message: {ex.Message}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: RestoreFromTray stack trace: {ex.StackTrace}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: RestoreFromTray FAILED: {ex.GetType().Name}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: RestoreFromTray error message: {ex.Message}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: RestoreFromTray stack trace: {ex.StackTrace}");
             }
             finally
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Exiting RestoreFromTray");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Exiting RestoreFromTray");
             }
         }
 
@@ -348,12 +348,12 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         private void MinimizeToTray()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Entered MinimizeToTray ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Entered MinimizeToTray ...");
             try
             {
                 if (_isClosing)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: MinimizeToTray: Already closing; ignoring.");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: MinimizeToTray: Already closing; ignoring.");
                     return;
                 }
 
@@ -361,22 +361,22 @@ namespace Smart_Stay_Awake_3.UI
                 if (_tray != null)
                 {
                     _tray.Show();
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: MinimizeToTray: Tray icon shown");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: MinimizeToTray: Tray icon shown");
                 }
 
                 // Hide the window completely (cleaner than WindowState.Minimized)
                 this.Hide();
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: MinimizeToTray: Window hidden");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: MinimizeToTray: Window hidden");
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: MinimizeToTray FAILED: {ex.GetType().Name}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: MinimizeToTray error message: {ex.Message}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: MinimizeToTray stack trace: {ex.StackTrace}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: MinimizeToTray FAILED: {ex.GetType().Name}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: MinimizeToTray error message: {ex.Message}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: MinimizeToTray stack trace: {ex.StackTrace}");
             }
             finally
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Exiting MinimizeToTray");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Exiting MinimizeToTray");
             }
         }
 
@@ -387,23 +387,23 @@ namespace Smart_Stay_Awake_3.UI
         /// <param name="source">Trace-friendly description of quit trigger source.</param>
         private void QuitApplication(string source)
         {
-            Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: Entered QuitApplication (source={source}) ...");
+            Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: Entered QuitApplication (source={source}) ...");
             try
             {
                 // Guard against recursive calls (e.g., Close() triggering FormClosing which calls this again)
                 if (_isClosing)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Already closing; ignoring recursive call.");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Already closing; ignoring recursive call.");
                     return;
                 }
 
                 _isClosing = true;
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Guard flag set (_isClosing = true)");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Guard flag set (_isClosing = true)");
 
                 // =====================================================================
                 // Dispose timers: Stop and cleanup timer resources (Module C)
                 // =====================================================================
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Disposing timers...");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Disposing timers...");
 
                 // Stop and dispose auto-quit timer
                 if (_autoQuitTimer != null)
@@ -411,11 +411,11 @@ namespace Smart_Stay_Awake_3.UI
                     try
                     {
                         _autoQuitTimer.Dispose();
-                        Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Auto-quit timer disposed");
+                        Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Auto-quit timer disposed");
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Error disposing auto-quit timer: " + ex.Message);
+                        Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Error disposing auto-quit timer: " + ex.Message);
                     }
                     finally
                     {
@@ -430,11 +430,11 @@ namespace Smart_Stay_Awake_3.UI
                         _countdownTimer.Stop();
                         _countdownTimer.Tick -= OnCountdownTick;
                         _countdownTimer.Dispose();
-                        Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Countdown timer disposed");
+                        Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Countdown timer disposed");
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Error disposing countdown timer: " + ex.Message);
+                        Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Error disposing countdown timer: " + ex.Message);
                     }
                     finally
                     {
@@ -447,18 +447,18 @@ namespace Smart_Stay_Awake_3.UI
                 // =====================================================================
                 // Critical cleanup: Allow system sleep/hibernation again before app exits.
                 // If this fails, the system will remain in keep-awake state even after app closes!
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Disarming keep-awake ...");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Disarming keep-awake ...");
                 bool disarmSuccess = PowerManagement.KeepAwakeManager.Disarm();
                 if (disarmSuccess)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Keep-awake disarmed successfully");
-                    Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: QuitApplication: System sleep/hibernation now ALLOWED (IsArmed={PowerManagement.KeepAwakeManager.IsArmed})");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Keep-awake disarmed successfully");
+                    Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: QuitApplication: System sleep/hibernation now ALLOWED (IsArmed={PowerManagement.KeepAwakeManager.IsArmed})");
                 }
                 else
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: CRITICAL - FAILED to disarm keep-awake!");
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: CRITICAL - System may remain in keep-awake state after app closes!");
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: CRITICAL - User may need to manually check 'powercfg -requests' and reboot if necessary");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: CRITICAL - FAILED to disarm keep-awake!");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: CRITICAL - System may remain in keep-awake state after app closes!");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: CRITICAL - User may need to manually check 'powercfg -requests' and reboot if necessary");
                     // Don't block quit on disarm failure - app must close
                     // But log it very loudly so user can investigate
                 }
@@ -473,35 +473,35 @@ namespace Smart_Stay_Awake_3.UI
                         _tray.Hide();
                         _tray.Dispose();
                         _tray = null;
-                        Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Tray disposed");
+                        Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Tray disposed");
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Tray disposal error: {ex.Message}");
+                        Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: QuitApplication: Tray disposal error: {ex.Message}");
                     }
                 }
 
                 // Close the form (will trigger FormClosing/FormClosed, but _isClosing guard prevents recursion)
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Calling this.Close()");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Calling this.Close()");
                 this.Close();
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: QuitApplication FAILED: {ex.GetType().Name}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: QuitApplication error message: {ex.Message}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: QuitApplication stack trace: {ex.StackTrace}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: QuitApplication FAILED: {ex.GetType().Name}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: QuitApplication error message: {ex.Message}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: QuitApplication stack trace: {ex.StackTrace}");
 
                 // Last resort: force exit
                 try
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: QuitApplication: Forcing Application.Exit() as last resort");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: QuitApplication: Forcing Application.Exit() as last resort");
                     Application.Exit();
                 }
                 catch { }
             }
             finally
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Exiting QuitApplication");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Exiting QuitApplication");
             }
         }
 
@@ -534,7 +534,7 @@ namespace Smart_Stay_Awake_3.UI
             // Only trace and act if actually minimizing (not just resizing)
             if (this.WindowState == FormWindowState.Minimized && !_isClosing)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnResize: Minimize detected => MinimizeToTray");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnResize: Minimize detected => MinimizeToTray");
                 MinimizeToTray();
             }
         }
@@ -546,12 +546,12 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: OnFormClosing: Entered (CloseReason={e.CloseReason})");
+            Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: OnFormClosing: Entered (CloseReason={e.CloseReason})");
 
             // If we're already in the quit flow, allow default close behavior
             if (_isClosing)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnFormClosing: Already closing; allowing default close");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnFormClosing: Already closing; allowing default close");
                 base.OnFormClosing(e);
                 return;
             }
@@ -562,14 +562,14 @@ namespace Smart_Stay_Awake_3.UI
                 e.CloseReason == CloseReason.TaskManagerClosing ||
                 e.CloseReason == CloseReason.FormOwnerClosing)
             {
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: OnFormClosing: User/system close => QuitApplication (CloseReason={e.CloseReason})");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: OnFormClosing: User/system close => QuitApplication (CloseReason={e.CloseReason})");
                 e.Cancel = true;  // Cancel the default close
                 QuitApplication($"FormClosing:{e.CloseReason}");
                 return;
             }
 
             // Other close reasons (application-initiated, etc.) - allow default
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnFormClosing: Non-user close; allowing default");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnFormClosing: Non-user close; allowing default");
             base.OnFormClosing(e);
         }
 
@@ -584,7 +584,7 @@ namespace Smart_Stay_Awake_3.UI
 
             if (m.Msg == WM_QUERYENDSESSION || m.Msg == WM_ENDSESSION)
             {
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: WndProc: Session ending (Msg=0x{m.Msg:X4}) => QuitApplication");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: WndProc: Session ending (Msg=0x{m.Msg:X4}) => QuitApplication");
 
                 if (!_isClosing)
                 {
@@ -823,12 +823,12 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         private void BuildBelowImageLayout()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Entered BuildBelowImageLayout ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Entered BuildBelowImageLayout ...");
             try
             {
                 if (_picture == null)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: PictureBox is null; cannot proceed");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: PictureBox is null; cannot proceed");
                     return;
                 }
 
@@ -846,7 +846,7 @@ namespace Smart_Stay_Awake_3.UI
                 // This ensures controls scale properly with form size and DPI scaling
                 int formClientWidth = this.ClientSize.Width;
                 int contentWidth = formClientWidth - PANEL_PADDING_LEFT - PANEL_PADDING_RIGHT;
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: Width calculation: formClient={formClientWidth}, padding={PANEL_PADDING_LEFT}+{PANEL_PADDING_RIGHT}, contentWidth={contentWidth}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: Width calculation: formClient={formClientWidth}, padding={PANEL_PADDING_LEFT}+{PANEL_PADDING_RIGHT}, contentWidth={contentWidth}");
 
                 // =====================================================================
                 // STEP 2: Convert image from Dock=Fill to Dock=Top with fixed height
@@ -854,7 +854,7 @@ namespace Smart_Stay_Awake_3.UI
                 int imageHeight = _picture.Height;
                 _picture.Dock = DockStyle.Top;
                 _picture.Height = imageHeight;
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: Image converted to Dock=Top, Height={imageHeight}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: Image converted to Dock=Top, Height={imageHeight}");
 
                 // =====================================================================
                 // STEP 3: Create controls container (FlowLayoutPanel with Dock=Fill)
@@ -883,13 +883,13 @@ namespace Smart_Stay_Awake_3.UI
                 // Correct order for Top-then-Fill layout:
                 //   [0] mainStack (Dock=Fill) - FRONT - docked SECOND (gets remainder after Top)
                 //   [1] PictureBox (Dock=Top) - BACK - docked FIRST (claims top portion)
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: Z-order BEFORE fix: Picture={this.Controls.GetChildIndex(_picture)}, Panel={this.Controls.GetChildIndex(mainStack)}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: Z-order BEFORE fix: Picture={this.Controls.GetChildIndex(_picture)}, Panel={this.Controls.GetChildIndex(mainStack)}");
 
                 this.Controls.SetChildIndex(_picture, 1);      // Move picture to back (higher index)
                 this.Controls.SetChildIndex(mainStack, 0);     // Ensure panel is front (index 0)
 
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: Z-order AFTER fix: Picture={this.Controls.GetChildIndex(_picture)}, Panel={this.Controls.GetChildIndex(mainStack)}");
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: Z-order corrected for proper dock processing (Top before Fill)");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: Z-order AFTER fix: Picture={this.Controls.GetChildIndex(_picture)}, Panel={this.Controls.GetChildIndex(mainStack)}");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: Z-order corrected for proper dock processing (Top before Fill)");
 
                 // =====================================================================
                 // STEP 5: Build child controls (using calculated dimensions)
@@ -971,7 +971,7 @@ namespace Smart_Stay_Awake_3.UI
                 };
                 mainStack.Controls.Add(_separator);
 
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: Text blurb (5 lines) and separator added");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: Text blurb (5 lines) and separator added");
 
                 var lblStatusHint = new Label
                 {
@@ -985,7 +985,7 @@ namespace Smart_Stay_Awake_3.UI
                     Font = new Font(SystemFonts.MessageBoxFont?.FontFamily ?? FontFamily.GenericSansSerif, 9.0f, FontStyle.Regular)
                 };
                 mainStack.Controls.Add(lblStatusHint);
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: Status hint label added");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: Status hint label added");
 
                 // Fields table (centered block, positioned after status hint)
                 BuildFieldsTable();
@@ -1028,7 +1028,7 @@ namespace Smart_Stay_Awake_3.UI
                     mainStack.Controls.Add(_buttonsRow);
                 }
 
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: Controls added to main stack");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: Controls added to main stack");
 
                 // =====================================================================
                 // STEP 6: Calculate final form height based on actual control measurements
@@ -1043,20 +1043,20 @@ namespace Smart_Stay_Awake_3.UI
                 // Safety margin prevents clipping at different DPI scales or with slight measurement variations
                 int newClientHeight = imageHeight + bottomPanelHeight + FORM_HEIGHT_SAFETY_MARGIN;
 
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: Height calculation: image={imageHeight}, panel={bottomPanelHeight}, margin={FORM_HEIGHT_SAFETY_MARGIN}, total={newClientHeight}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: Height calculation: image={imageHeight}, panel={bottomPanelHeight}, margin={FORM_HEIGHT_SAFETY_MARGIN}, total={newClientHeight}");
 
                 this.ClientSize = new Size(this.ClientSize.Width, newClientHeight);
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout: Form resized to {this.ClientSize.Width}x{this.ClientSize.Height}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout: Form resized to {this.ClientSize.Width}x{this.ClientSize.Height}");
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout FAILED: {ex.GetType().Name}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout error message: {ex.Message}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildBelowImageLayout stack trace: {ex.StackTrace}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout FAILED: {ex.GetType().Name}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout error message: {ex.Message}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildBelowImageLayout stack trace: {ex.StackTrace}");
             }
             finally
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Exiting BuildBelowImageLayout");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Exiting BuildBelowImageLayout");
             }
         }
 
@@ -1066,7 +1066,7 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         private void BuildButtonsRow()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Entered BuildButtonsRow ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Entered BuildButtonsRow ...");
             try
             {
                 // Left button: Minimize to system tray
@@ -1080,7 +1080,7 @@ namespace Smart_Stay_Awake_3.UI
                 };
                 btnMin.Click += (s, e) =>
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Button 'Minimize to System Tray' clicked => MinimizeToTray");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Button 'Minimize to System Tray' clicked => MinimizeToTray");
                     MinimizeToTray();
                 };
 
@@ -1098,7 +1098,7 @@ namespace Smart_Stay_Awake_3.UI
                 // Wire it to use the existing modal help logic
                 btnHelp.Click += (s, e) =>
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Button 'Help' clicked => ShowHelpModal");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Button 'Help' clicked => ShowHelpModal");
                     ShowHelpModal();
                 };
 
@@ -1113,7 +1113,7 @@ namespace Smart_Stay_Awake_3.UI
                 };
                 btnQuit.Click += (s, e) =>
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Button 'Quit' clicked => QuitApplication");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Button 'Quit' clicked => QuitApplication");
                     QuitApplication("Button.Quit");
                 };
 
@@ -1155,17 +1155,17 @@ namespace Smart_Stay_Awake_3.UI
                 };
                 _buttonsRow.Controls.Add(buttonPanel);
 
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildButtonsRow: 3 buttons added (manual positioning)");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: BuildButtonsRow: 3 buttons added (manual positioning)");
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildButtonsRow FAILED: {ex.GetType().Name}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildButtonsRow error message: {ex.Message}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildButtonsRow stack trace: {ex.StackTrace}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildButtonsRow FAILED: {ex.GetType().Name}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildButtonsRow error message: {ex.Message}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildButtonsRow stack trace: {ex.StackTrace}");
             }
             finally
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Exiting BuildButtonsRow");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Exiting BuildButtonsRow");
             }
         }
 
@@ -1182,7 +1182,7 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         private void BuildFieldsTable()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Entered BuildFieldsTable ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Entered BuildFieldsTable ...");
             try
             {
                 _fieldsTable = new TableLayoutPanel
@@ -1237,7 +1237,7 @@ namespace Smart_Stay_Awake_3.UI
                 AddRow("Auto-quit at", _fldUntil);
                 AddRow("Time remaining", _fldRemaining);
                 AddRow("Time remaining update frequency", _fldCadence);
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildFieldsTable: 3 field rows added (right/left aligned)");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: BuildFieldsTable: 3 field rows added (right/left aligned)");
 
                 // =====================================================================
                 // Conditional visibility: Hide countdown fields when no timer is active
@@ -1246,30 +1246,30 @@ namespace Smart_Stay_Awake_3.UI
                 // Mode == Indefinite means keep-awake runs forever with no auto-quit timer.
                 if (_state.Mode == PlannedMode.Indefinite)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildFieldsTable: Mode is Indefinite (no timer)");
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildFieldsTable: Hiding entire fields table (countdown info not applicable)");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: BuildFieldsTable: Mode is Indefinite (no timer)");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: BuildFieldsTable: Hiding entire fields table (countdown info not applicable)");
 
                     // Hide the entire table (cleaner than hiding individual rows)
                     _fieldsTable.Visible = false;
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildFieldsTable: Fields table hidden (_fieldsTable.Visible=false)");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: BuildFieldsTable: Fields table hidden (_fieldsTable.Visible=false)");
                 }
                 else
                 {
-                    Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildFieldsTable: Mode is {_state.Mode} (timer active)");
-                    Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: BuildFieldsTable: Fields table remains visible (countdown info relevant)");
-                    Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildFieldsTable: Timer details: Until={_state.PlannedUntilLocal?.ToString("yyyy-MM-dd HH:mm:ss") ?? "<none>"}, Duration={_state.PlannedTotal?.ToString() ?? "<none>"}");
+                    Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildFieldsTable: Mode is {_state.Mode} (timer active)");
+                    Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: BuildFieldsTable: Fields table remains visible (countdown info relevant)");
+                    Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildFieldsTable: Timer details: Until={_state.PlannedUntilLocal?.ToString("yyyy-MM-dd HH:mm:ss") ?? "<none>"}, Duration={_state.PlannedTotal?.ToString() ?? "<none>"}");
                     // Fields stay visible with placeholder values (will be updated by timer in future iteration)
                 }
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildFieldsTable FAILED: {ex.GetType().Name}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildFieldsTable error message: {ex.Message}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: BuildFieldsTable stack trace: {ex.StackTrace}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildFieldsTable FAILED: {ex.GetType().Name}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildFieldsTable error message: {ex.Message}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: BuildFieldsTable stack trace: {ex.StackTrace}");
             }
             finally
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Exiting BuildFieldsTable");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Exiting BuildFieldsTable");
             }
         }
         /// <summary>
@@ -1302,7 +1302,7 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         private void ShowHelpModal()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Entered ShowHelpModal ...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Entered ShowHelpModal ...");
             try
             {
                 string helpText = HelpTextBuilder.BuildHelpText();
@@ -1345,15 +1345,15 @@ namespace Smart_Stay_Awake_3.UI
                 // Ensure size is set after controls are added
                 dlg.ClientSize = new Size(help_size_x, help_size_y);
 
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: ShowHelpModal: Displaying modal help dialog");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: ShowHelpModal: Displaying modal help dialog");
                 dlg.ShowDialog(this);
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: ShowHelpModal: Help dialog closed");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: ShowHelpModal: Help dialog closed");
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: ShowHelpModal FAILED: {ex.GetType().Name}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: ShowHelpModal error message: {ex.Message}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: UI.MainForm: ShowHelpModal stack trace: {ex.StackTrace}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: ShowHelpModal FAILED: {ex.GetType().Name}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: ShowHelpModal error message: {ex.Message}");
+                Trace.WriteLine($"Smart_Stay_Awake: UI.MainForm: ShowHelpModal stack trace: {ex.StackTrace}");
 
                 MessageBox.Show(this, "Help is unavailable.\n" + ex.Message,
                     _state.AppDisplayName + " — Help Error",
@@ -1361,7 +1361,7 @@ namespace Smart_Stay_Awake_3.UI
             }
             finally
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: Exiting ShowHelpModal");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: Exiting ShowHelpModal");
             }
         }
 
@@ -1464,18 +1464,18 @@ namespace Smart_Stay_Awake_3.UI
         /// <param name="state">Timer state (unused)</param>
         private void OnAutoQuitCallback(object? state)
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnAutoQuitCallback: Auto-quit timer expired, quitting application...");
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnAutoQuitCallback: Auto-quit timer expired, quitting application...");
 
             // Marshal to UI thread (callback runs on ThreadPool thread)
             if (this.InvokeRequired)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnAutoQuitCallback: Marshaling to UI thread via Invoke()");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnAutoQuitCallback: Marshaling to UI thread via Invoke()");
                 this.Invoke(new Action(() => QuitApplication("Timer.AutoQuit")));
             }
             else
             {
                 // Already on UI thread (shouldn't happen, but defensive)
-                Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: OnAutoQuitCallback: Already on UI thread (unexpected)");
+                Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: OnAutoQuitCallback: Already on UI thread (unexpected)");
                 QuitApplication("Timer.AutoQuit");
             }
         }
@@ -1519,7 +1519,7 @@ namespace Smart_Stay_Awake_3.UI
             long memAfter = GC.GetTotalMemory(false);
             int threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
             string localTime = DateTime.Now.ToString("HH:mm:ss.fff");
-            Trace.WriteLine("Smart_Stay_Awake_3: UI.MainForm: [PERF] Tick: " + sw.ElapsedTicks + " ticks (" + sw.Elapsed.TotalMilliseconds.ToString("F3") + "ms), " +
+            Trace.WriteLine("Smart_Stay_Awake: UI.MainForm: [PERF] Tick: " + sw.ElapsedTicks + " ticks (" + sw.Elapsed.TotalMilliseconds.ToString("F3") + "ms), " +
                             "Thread: " + threadId + ", Mem: " + (memAfter - memBefore) + " bytes, Visible: " + this.Visible + ", Time: " + localTime);
 #endif
         }

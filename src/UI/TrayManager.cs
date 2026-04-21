@@ -1,11 +1,11 @@
-﻿// File: src/Smart_Stay_Awake_3/UI/TrayManager.cs
+﻿// File: src/Smart_Stay_Awake/UI/TrayManager.cs
 using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;            // <-- needed for MemoryStream
 using System.Windows.Forms;
 
-namespace Smart_Stay_Awake_3.UI
+namespace Smart_Stay_Awake.UI
 {
     internal sealed class TrayManager : IDisposable
     {
@@ -39,7 +39,7 @@ namespace Smart_Stay_Awake_3.UI
 
         public TrayManager(AppState state, Form ownerForm)
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Entered ctor ...");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: Entered ctor ...");
             _state = state ?? throw new ArgumentNullException(nameof(state));
             _ownerForm = ownerForm ?? throw new ArgumentNullException(nameof(ownerForm));
             Trace.WriteLine("TrayManager: Exiting ctor (success).");
@@ -50,11 +50,11 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         public void Initialize()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Initialize: Entered ...");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: Initialize: Entered ...");
             if (_disposed) throw new ObjectDisposedException(nameof(TrayManager));
             if (_initialized)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Initialize: Already initialized; exiting.");
+                Trace.WriteLine("Smart_Stay_Awake: TrayManager: Initialize: Already initialized; exiting.");
                 return;
             }
 
@@ -64,7 +64,7 @@ namespace Smart_Stay_Awake_3.UI
             var miShow = new ToolStripMenuItem("Show Window");
             miShow.Click += (s, e) =>
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Context menu 'Show Window' clicked => raising ShowRequested event");
+                Trace.WriteLine("Smart_Stay_Awake: TrayManager: Context menu 'Show Window' clicked => raising ShowRequested event");
                 ShowRequested?.Invoke(this, EventArgs.Empty);
             };
             _menu.Items.Add(miShow);
@@ -72,7 +72,7 @@ namespace Smart_Stay_Awake_3.UI
             var miHelp = new ToolStripMenuItem("Help");
             miHelp.Click += (s, e) =>
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Context menu 'Help' clicked => calling MainForm.ShowHelp()");
+                Trace.WriteLine("Smart_Stay_Awake: TrayManager: Context menu 'Help' clicked => calling MainForm.ShowHelp()");
                 // Safely invoke ShowHelp() on the owner form (MainForm)
                 if (_ownerForm is MainForm mainForm)
                 {
@@ -80,7 +80,7 @@ namespace Smart_Stay_Awake_3.UI
                 }
                 else
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: WARNING: Owner form is not MainForm; cannot show help");
+                    Trace.WriteLine("Smart_Stay_Awake: TrayManager: WARNING: Owner form is not MainForm; cannot show help");
                 }
             };
             _menu.Items.Add(miHelp);
@@ -90,11 +90,11 @@ namespace Smart_Stay_Awake_3.UI
             var miQuit = new ToolStripMenuItem("Quit");
             miQuit.Click += (s, e) =>
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Context menu 'Quit' clicked => raising QuitRequested event");
+                Trace.WriteLine("Smart_Stay_Awake: TrayManager: Context menu 'Quit' clicked => raising QuitRequested event");
                 QuitRequested?.Invoke(this, EventArgs.Empty);
             };
             _menu.Items.Add(miQuit);
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Context menu built (3 items: Show Window, Help, Quit)");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: Context menu built (3 items: Show Window, Help, Quit)");
 
             _tray = new NotifyIcon
             {
@@ -108,10 +108,10 @@ namespace Smart_Stay_Awake_3.UI
             // Left-click on tray icon => restore main window
             // Right-click shows context menu (standard NotifyIcon behavior)
             _tray.MouseClick += OnTrayIconMouseClick;
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Left-click handler registered");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: Left-click handler registered");
 
             _initialized = true;
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Initialize: Exiting (success).");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: Initialize: Exiting (success).");
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         public void SetIcon(Icon icon, MemoryStream backingStream)
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: SetIcon ...");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: SetIcon ...");
             if (_disposed) throw new ObjectDisposedException(nameof(TrayManager));
             if (!_initialized) Initialize();
 
@@ -142,25 +142,25 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         private void OnTrayIconMouseClick(object? sender, MouseEventArgs e)
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: OnTrayIconMouseClick: Entered ...");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: OnTrayIconMouseClick: Entered ...");
             try
             {
                 if (e.Button == MouseButtons.Left)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Tray icon left-clicked => raising ShowRequested event");
+                    Trace.WriteLine("Smart_Stay_Awake: TrayManager: Tray icon left-clicked => raising ShowRequested event");
                     ShowRequested?.Invoke(this, EventArgs.Empty);
                 }
                 // Right-click is handled automatically by NotifyIcon (shows ContextMenuStrip)
             }
             catch (Exception ex)
             {
-                Trace.WriteLine($"Smart_Stay_Awake_3: TrayManager: OnTrayIconMouseClick FAILED: {ex.GetType().Name}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: TrayManager: OnTrayIconMouseClick error message: {ex.Message}");
-                Trace.WriteLine($"Smart_Stay_Awake_3: TrayManager: OnTrayIconMouseClick stack trace: {ex.StackTrace}");
+                Trace.WriteLine($"Smart_Stay_Awake: TrayManager: OnTrayIconMouseClick FAILED: {ex.GetType().Name}");
+                Trace.WriteLine($"Smart_Stay_Awake: TrayManager: OnTrayIconMouseClick error message: {ex.Message}");
+                Trace.WriteLine($"Smart_Stay_Awake: TrayManager: OnTrayIconMouseClick stack trace: {ex.StackTrace}");
             }
             finally
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: OnTrayIconMouseClick: Exiting.");
+                Trace.WriteLine("Smart_Stay_Awake: TrayManager: OnTrayIconMouseClick: Exiting.");
             }
         }
 
@@ -169,11 +169,11 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         public void Show()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Show: Entered ...");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: Show: Entered ...");
             if (_disposed) throw new ObjectDisposedException(nameof(TrayManager));
             if (!_initialized) Initialize();
             if (_tray != null) _tray.Visible = true;
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Show: Exiting.");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: Show: Exiting.");
         }
 
         /// <summary>
@@ -181,21 +181,21 @@ namespace Smart_Stay_Awake_3.UI
         /// </summary>
         public void Hide()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Hide: Entered ...");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: Hide: Entered ...");
             if (_tray != null) _tray.Visible = false;
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Hide: Exiting.");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: Hide: Exiting.");
         }
 
         public void Dispose()
         {
             if (_disposed) return;
-            Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Dispose: Entered ...");
+            Trace.WriteLine("Smart_Stay_Awake: TrayManager: Dispose: Entered ...");
 
             // Unsubscribe event handler to prevent leaks
             if (_tray != null)
             {
                 _tray.MouseClick -= OnTrayIconMouseClick;
-                Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: MouseClick event handler unsubscribed");
+                Trace.WriteLine("Smart_Stay_Awake: TrayManager: MouseClick event handler unsubscribed");
             }
 
             try
@@ -213,12 +213,12 @@ namespace Smart_Stay_Awake_3.UI
             }
             catch (Exception ex)
             {
-                Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Dispose: Caught exception: " + ex);
+                Trace.WriteLine("Smart_Stay_Awake: TrayManager: Dispose: Caught exception: " + ex);
             }
             finally
             {
                 _disposed = true;
-                Trace.WriteLine("Smart_Stay_Awake_3: TrayManager: Dispose: Exiting.");
+                Trace.WriteLine("Smart_Stay_Awake: TrayManager: Dispose: Exiting.");
             }
         }
     }

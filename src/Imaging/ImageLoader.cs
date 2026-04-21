@@ -1,4 +1,4 @@
-﻿// File: src/Smart_Stay_Awake_3/Imaging/ImageLoader.cs
+﻿// File: src/Smart_Stay_Awake/Imaging/ImageLoader.cs
 // Purpose: Load a Bitmap from a chosen source (CLI path now; fallback next).
 // Notes:
 //   * System.Drawing on .NET 10 is supported on Windows. We dispose streams promptly.
@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 
-namespace Smart_Stay_Awake_3.Imaging
+namespace Smart_Stay_Awake.Imaging
 {
     internal static class ImageLoader
     {

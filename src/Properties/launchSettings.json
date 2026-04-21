@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Smart_Stay_Awake_3": {
+    "Smart_Stay_Awake": {
       "commandName": "Project",
 
       // Indefinite mode with verbose

@@ -1,11 +1,11 @@
-﻿// File: src/Smart_Stay_Awake_3/Config/AppConfig.cs
+﻿// File: src/Smart_Stay_Awake/Config/AppConfig.cs
 // Purpose: Single home for app-wide constants and defaults.
 // Naming: per your rule, CONSTANTS in UPPER_CASE_WITH_UNDERSCORES.
 
 using System;
 using System.Collections.Generic;
 
-namespace Smart_Stay_Awake_3
+namespace Smart_Stay_Awake
 {
     /// <summary>
     /// Defines which power management implementation to use.
@@ -36,7 +36,7 @@ namespace Smart_Stay_Awake_3
         public static readonly PowerManagementStrategy POWER_STRATEGY = PowerManagementStrategy.ModernPowerRequests;
 
         // ---- App identity ----------------------------------------------------
-        public const string APP_INTERNAL_NAME = "Smart_Stay_Awake_3";
+        public const string APP_INTERNAL_NAME = "Smart_Stay_Awake";
         public const string APP_DISPLAY_NAME = "Smart Stay Awake 3";
 
         // ---- Tracing defaults -------------------------------------------------

@@ -1,4 +1,4 @@
-﻿// File: src/Smart_Stay_Awake_3/Imaging/IconWriter.cs
+﻿// File: src/Smart_Stay_Awake/Imaging/IconWriter.cs
 // Purpose: Phase 1 – get a 32x32 Icon from a Bitmap using GetHicon.
 // Notes:
 //   * Icon.FromHandle does not own the HICON lifetime; we duplicate via new Icon(icon, size) to detach.
@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 
-namespace Smart_Stay_Awake_3.Imaging
+namespace Smart_Stay_Awake.Imaging
 {
     internal static class IconWriter
     {

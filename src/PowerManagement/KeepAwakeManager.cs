@@ -1,4 +1,4 @@
-﻿// File: src/Smart_Stay_Awake_3/PowerManagement/KeepAwakeManager.cs
+﻿// File: src/Smart_Stay_Awake/PowerManagement/KeepAwakeManager.cs
 // Purpose: High-level keep-awake manager with state tracking and strategy switching.
 //          Provides clean interface for arming/disarming keep-awake from anywhere in the app.
 //          Wraps low-level ExecutionState implementations with business logic and idempotency.
@@ -7,7 +7,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Smart_Stay_Awake_3.PowerManagement
+namespace Smart_Stay_Awake.PowerManagement
 {
     /// <summary>
     /// High-level manager for keep-awake functionality.
@@ -52,43 +52,43 @@ namespace Smart_Stay_Awake_3.PowerManagement
         /// <returns>True if armed successfully (or already armed), false if Win32 call failed.</returns>
         public static bool Arm(AppState appState)
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Entered Arm ...");
+            Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Entered Arm ...");
 
             lock (_lock)
             {
                 // Log strategy once on first use
                 if (!_strategyLogged)
                 {
-                    Trace.WriteLine($"Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Power management strategy: {AppConfig.POWER_STRATEGY}");
+                    Trace.WriteLine($"Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Power management strategy: {AppConfig.POWER_STRATEGY}");
                     _strategyLogged = true;
                 }
 
                 // Idempotency check: already armed?
                 if (_isArmed)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Arm: Already armed (no-op)");
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Exiting Arm (already armed, returning true)");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Arm: Already armed (no-op)");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Exiting Arm (already armed, returning true)");
                     return true;
                 }
 
-                Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Arm: Not armed yet, dispatching to strategy implementation ...");
+                Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Arm: Not armed yet, dispatching to strategy implementation ...");
 
                 bool success = false;
 
                 // Strategy dispatch
                 if (AppConfig.POWER_STRATEGY == PowerManagementStrategy.LegacyThreadExecutionState)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Arm: Using LEGACY strategy (SetThreadExecutionState)");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Arm: Using LEGACY strategy (SetThreadExecutionState)");
                     success = ExecutionStateLegacyThread.ArmKeepAwake();
                 }
                 else if (AppConfig.POWER_STRATEGY == PowerManagementStrategy.ModernPowerRequests)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Arm: Using MODERN strategy (Power Request APIs)");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Arm: Using MODERN strategy (Power Request APIs)");
 
                     // Create new instance if needed (first call or after dispose)
                     if (_modernInstance == null)
                     {
-                        Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Arm: Creating new ExecutionStateModernPowerRequests instance ...");
+                        Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Arm: Creating new ExecutionStateModernPowerRequests instance ...");
                         _modernInstance = new ExecutionStateModernPowerRequests();
                     }
 
@@ -96,23 +96,23 @@ namespace Smart_Stay_Awake_3.PowerManagement
                 }
                 else
                 {
-                    Trace.WriteLine($"Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Arm: ERROR - Unknown strategy: {AppConfig.POWER_STRATEGY}");
+                    Trace.WriteLine($"Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Arm: ERROR - Unknown strategy: {AppConfig.POWER_STRATEGY}");
                     success = false;
                 }
 
                 if (success)
                 {
                     _isArmed = true;
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Arm: SUCCESS - Keep-awake is now ARMED");
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Arm: State changed: _isArmed=false -> true");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Arm: SUCCESS - Keep-awake is now ARMED");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Arm: State changed: _isArmed=false -> true");
                 }
                 else
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Arm: FAILED - Strategy implementation returned false");
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Arm: State unchanged: _isArmed=false");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Arm: FAILED - Strategy implementation returned false");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Arm: State unchanged: _isArmed=false");
                 }
 
-                Trace.WriteLine($"Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Exiting Arm (success={success})");
+                Trace.WriteLine($"Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Exiting Arm (success={success})");
                 return success;
             }
         }
@@ -127,66 +127,66 @@ namespace Smart_Stay_Awake_3.PowerManagement
         /// <returns>True if disarmed successfully (or already disarmed), false if Win32 call failed.</returns>
         public static bool Disarm()
         {
-            Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Entered Disarm ...");
+            Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Entered Disarm ...");
 
             lock (_lock)
             {
                 // Idempotency check: already disarmed?
                 if (!_isArmed)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: Already disarmed (no-op)");
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Exiting Disarm (already disarmed, returning true)");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: Already disarmed (no-op)");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Exiting Disarm (already disarmed, returning true)");
                     return true;
                 }
 
-                Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: Currently armed, dispatching to strategy implementation ...");
+                Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: Currently armed, dispatching to strategy implementation ...");
 
                 bool success = false;
 
                 // Strategy dispatch
                 if (AppConfig.POWER_STRATEGY == PowerManagementStrategy.LegacyThreadExecutionState)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: Using LEGACY strategy (SetThreadExecutionState)");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: Using LEGACY strategy (SetThreadExecutionState)");
                     success = ExecutionStateLegacyThread.DisarmKeepAwake();
                 }
                 else if (AppConfig.POWER_STRATEGY == PowerManagementStrategy.ModernPowerRequests)
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: Using MODERN strategy (Power Request APIs)");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: Using MODERN strategy (Power Request APIs)");
 
                     if (_modernInstance != null)
                     {
                         success = _modernInstance.DisarmKeepAwake();
 
                         // Dispose and nullify instance to release resources
-                        Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: Disposing ExecutionStateModernPowerRequests instance ...");
+                        Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: Disposing ExecutionStateModernPowerRequests instance ...");
                         _modernInstance.Dispose();
                         _modernInstance = null;
                     }
                     else
                     {
-                        Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: No modern instance exists (unexpected state, treating as success)");
+                        Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: No modern instance exists (unexpected state, treating as success)");
                         success = true;
                     }
                 }
                 else
                 {
-                    Trace.WriteLine($"Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: ERROR - Unknown strategy: {AppConfig.POWER_STRATEGY}");
+                    Trace.WriteLine($"Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: ERROR - Unknown strategy: {AppConfig.POWER_STRATEGY}");
                     success = false;
                 }
 
                 if (success)
                 {
                     _isArmed = false;
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: SUCCESS - Keep-awake is now DISARMED");
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: State changed: _isArmed=true -> false");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: SUCCESS - Keep-awake is now DISARMED");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: State changed: _isArmed=true -> false");
                 }
                 else
                 {
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: FAILED - Strategy implementation returned false");
-                    Trace.WriteLine("Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Disarm: State unchanged: _isArmed=true (CRITICAL: keep-awake still active!)");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: FAILED - Strategy implementation returned false");
+                    Trace.WriteLine("Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Disarm: State unchanged: _isArmed=true (CRITICAL: keep-awake still active!)");
                 }
 
-                Trace.WriteLine($"Smart_Stay_Awake_3: PowerManagement.KeepAwakeManager: Exiting Disarm (success={success})");
+                Trace.WriteLine($"Smart_Stay_Awake: PowerManagement.KeepAwakeManager: Exiting Disarm (success={success})");
                 return success;
             }
         }

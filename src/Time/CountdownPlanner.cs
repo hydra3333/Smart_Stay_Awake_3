@@ -1,11 +1,11 @@
-﻿// File: src/Smart_Stay_Awake_3/Time/CountdownPlanner.cs
+﻿// File: src/Smart_Stay_Awake/Time/CountdownPlanner.cs
 // Purpose: Countdown timer planning and formatting utilities.
 // Provides adaptive cadence selection, snap-to-boundary logic, and time formatting.
 
 using System;
 using System.Diagnostics;
 
-namespace Smart_Stay_Awake_3.Time
+namespace Smart_Stay_Awake.Time
 {
     /// <summary>
     /// Static utility class for countdown timer cadence planning and time formatting.
@@ -31,7 +31,7 @@ namespace Smart_Stay_Awake_3.Time
             }
 
             // Should never reach here (catch-all threshold = -1), but safety fallback
-            Trace.WriteLine("Smart_Stay_Awake_3: CountdownPlanner: WARNING - No cadence band matched, using 1s fallback");
+            Trace.WriteLine("Smart_Stay_Awake: CountdownPlanner: WARNING - No cadence band matched, using 1s fallback");
             return 1_000;
         }
 
@@ -72,7 +72,7 @@ namespace Smart_Stay_Awake_3.Time
                     if (snapMs < baseCadenceMs)
                     {
                         nextIntervalMs = snapMs;
-                        Trace.WriteLine("Smart_Stay_Awake_3: CountdownPlanner: Snap-to applied: remaining=" + remainingSeconds + "s, phase=" + phaseSeconds + "s, snap=" + snapMs + "ms");
+                        Trace.WriteLine("Smart_Stay_Awake: CountdownPlanner: Snap-to applied: remaining=" + remainingSeconds + "s, phase=" + phaseSeconds + "s, snap=" + snapMs + "ms");
                     }
                 }
             }

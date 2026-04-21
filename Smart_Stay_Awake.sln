@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.5.11709.299 stable
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smart_Stay_Awake_3", "src\Smart_Stay_Awake_3.csproj", "{0758E005-8285-6027-64AC-96BE441301CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smart_Stay_Awake", "src\Smart_Stay_Awake.csproj", "{0758E005-8285-6027-64AC-96BE441301CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
