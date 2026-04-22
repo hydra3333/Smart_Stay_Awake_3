@@ -1,13 +1,10 @@
 {
   "profiles": {
     "Smart_Stay_Awake": {
-      "commandName": "Project"
-
-      // Indefinite mode
-      "commandLineArgs": ""
+      "commandName": "Project",
 
       // Indefinite mode with verbose
-      // "commandLineArgs": "--verbose"
+      "commandLineArgs": "--verbose"
 
       // for 15 secs
       //"commandLineArgs": "--verbose --for 15s"

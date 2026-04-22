@@ -85,10 +85,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-
-  <ItemGroup>
 	<None Update="Assets\Smart_Stay_Awake_icon.png">
 	   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	   <Link>Smart_Stay_Awake_icon.png</Link>
