@@ -13,7 +13,11 @@
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
-    <PublishSingleFile>true</PublishSingleFile>
+	<!-- START of single-exe vs AOT block -->
+	<!--  <PublishSingleFile>true</PublishSingleFile> -->
+	<IsAotCompatible>true</IsAotCompatible>
+	<EnableAotAnalyzer>true</EnableAotAnalyzer>
+	<!-- END of single-exe vs AOT block -->
     <PublishReadyToRun>true</PublishReadyToRun>
     <PublishTrimmed>false</PublishTrimmed>
 	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
