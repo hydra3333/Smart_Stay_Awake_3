@@ -13,11 +13,7 @@
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
-	<!-- START of single-exe vs AOT block -->
-	<!--  <PublishSingleFile>true</PublishSingleFile> -->
-	<IsAotCompatible>true</IsAotCompatible>
-	<EnableAotAnalyzer>true</EnableAotAnalyzer>
-	<!-- END of single-exe vs AOT block -->
+	<PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>true</PublishReadyToRun>
     <PublishTrimmed>false</PublishTrimmed>
 	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
@@ -33,6 +29,15 @@
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(PublishAot)' == 'true'">
+	<IsAotCompatible>true</IsAotCompatible>
+	<EnableAotAnalyzer>true</EnableAotAnalyzer>
+	<PublishTrimmed>true</PublishTrimmed>
+	<_AllowWindowsFormsWithTrim>true</_AllowWindowsFormsWithTrim>
+	<SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+	<StripSymbols>true</StripSymbols>
+  </PropertyGroup>
+		
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
