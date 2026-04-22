@@ -50,6 +50,9 @@ namespace Smart_Stay_Awake
                 CliOptions opts = CliParser.Parse(args);
                 Trace.WriteLine("Smart_Stay_Awake: Main: End of   CLI parse TRY (success)");
 
+                // COMMENT OUT FOR RELEASE BUILDS:
+                // if (args.Length > 0) { MessageBox.Show($"Args received: {string.Join(" ", args)}\nVerbose Opt: {opts.Verbose}"); }
+
                 // 1a) If --help was requested, print usage and exit(0) BEFORE any other work.
                 if (opts.ShowHelp)
                 {
@@ -61,6 +64,9 @@ namespace Smart_Stay_Awake
                 // 2) Configure tracing
                 bool enableTrace = FORCED_TRACE || opts.Verbose;
                 string? logFullPath = null;
+
+                // COMMENT OUT FOR RELEASE BUILDS:
+                // MessageBox.Show($"DEBUG MSGBOX: FORCED_TRACE={FORCED_TRACE}\nopts.Verbose={opts.Verbose}\nenableTrace={enableTrace}\nlogFullPath='{logFullPath}'");
 
                 // When Tracing enabled, setup Listeners
                 Trace.WriteLine("Smart_Stay_Awake: Main: Start of tracing config TRY");
@@ -79,15 +85,23 @@ namespace Smart_Stay_Awake
                         string fallbackDir = Path.Combine(
                             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                             AppConfig.LOG_FALLBACK_SUBDIR);
+
+                        // COMMENT OUT FOR RELEASE BUILDS:
+                        // MessageBox.Show($"DEBUG MSGBOX: exeDir='{exeDir}'\ntoday='{today}'\nfileName='{fileName}'\ncandidate='{candidate}'\nfallbackDir='{fallbackDir}'");
+
                         // CanOpenForWrite() creates the file to test writability
                         if (CanOpenForWrite(candidate))
                         {
                             logFullPath = candidate;
+                            // COMMENT OUT FOR RELEASE BUILDS:
+                            // MessageBox.Show($"DEBUG MSGBOX: CanOpenForWrite('{candidate}') is TRUE, so\nlogFullPath='{logFullPath}'");
                         }
                         else
                         {
                             Directory.CreateDirectory(fallbackDir);
                             logFullPath = Path.Combine(fallbackDir, fileName);
+                            // COMMENT OUT FOR RELEASE BUILDS:
+                            // MessageBox.Show($"DEBUG MSGBOX: CanOpenForWrite('{candidate}') is FALSE, so\nfallbackDir='{fallbackDir}'\nDirectory.CreateDirectory('{fallbackDir}')\nlogFullPath='{logFullPath}'");
                         }
                         // Overwrite each run to keep logs tight.
                         // But CanOpenForWrite() creates the file to test writability anyway, so no need to open/truncate.
@@ -101,7 +115,7 @@ namespace Smart_Stay_Awake
                         Trace.Listeners.Add(new DefaultTraceListener());
 #endif
                         Trace.AutoFlush = true;
-                        Trace.WriteLine("==================================================");
+                        Trace.WriteLine(" ==================================================");
                         Trace.WriteLine($"[Init] {AppConfig.APP_INTERNAL_NAME} start {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}");
                         // Grab version like AppState.Create(...) would
                         var asm = System.Reflection.Assembly.GetEntryAssembly();

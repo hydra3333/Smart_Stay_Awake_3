@@ -4,7 +4,7 @@
       "commandName": "Project",
 
       // Indefinite mode with verbose
-      // "commandLineArgs": "--verbose"
+      "commandLineArgs": "--verbose"
 
       // for 15 secs
       //"commandLineArgs": "--verbose --for 15s"
@@ -13,7 +13,7 @@
       //"commandLineArgs": "--verbose --for 1m5s",
 
       // for 1m 15 secs
-       "commandLineArgs": "--verbose --for 1m15s"
+      // "commandLineArgs": "--verbose --for 1m15s"
 
       // Timed with specific duration
       // "commandLineArgs": "--verbose --for 2h30m"

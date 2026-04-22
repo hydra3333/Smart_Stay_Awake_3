@@ -12,11 +12,24 @@
     <PlatformTarget>x64</PlatformTarget>
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <SelfContained>true</SelfContained>
-    <PublishSingleFile>true</PublishSingleFile>
+<!-- Comment out self-contained stuff -->
+<!--
+	<SelfContained>true</SelfContained>
+	<PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>true</PublishReadyToRun>
-    <PublishTrimmed>false</PublishTrimmed>
-	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	<PublishTrimmed>false</PublishTrimmed>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+--> 
+<!-- START enable AOT stuff -->
+	<PublishAot>true</PublishAot>
+	<IsAotCompatible>true</IsAotCompatible>
+	<EnableAotAnalyzer>true</EnableAotAnalyzer>
+	<_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
+	<PublishTrimmed>true</PublishTrimmed>
+	<TrimMode>link</TrimMode>
+	<SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+	<StripSymbols>true</StripSymbols>
+<!-- FINISH enable AOT stuff -->
     <ErrorReport>none</ErrorReport>
     <Copyright>GNU AFFERO GENERAL PUBLIC LICENSE Version 3</Copyright>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -29,7 +42,15 @@
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+	<PropertyGroup>
+		<NoWarn>$(NoWarn);IL2104;IL3000</NoWarn>
+		<_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
+	</PropertyGroup>
+	<ItemGroup>
+		<IlcArg Include="--nowarn:IL3053" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
     <Optimize>False</Optimize>
@@ -61,10 +82,6 @@
     <Content Include="Assets\Smart_Stay_Awake_icon.png">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 
   <ItemGroup>

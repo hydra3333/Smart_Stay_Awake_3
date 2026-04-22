@@ -23,7 +23,7 @@ REASON_CONTEXT
 POWER_REQUEST_TYPE
 
 // (Optional) If you ever want *everything* in the power namespace generated,
-// you can add the namespace line below. It’s usually overkill, so leave it out
+// you can add the namespace line below. Itï¿½s usually overkill, so leave it out
 // unless you know you need more types:
 //
 // Windows.Win32.System.Power

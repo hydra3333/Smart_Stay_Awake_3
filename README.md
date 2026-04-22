@@ -22,7 +22,7 @@ Common Statuses
 ![Status: Inactive](https://img.shields.io/badge/status-inactive-lightgrey)
 ![Status](https://img.shields.io/badge/status-Under%20Development-orange) 
 
-Common status labels
+Common status labels 
 active, maintained, stable
 alpha, beta, experimental
 deprecated, legacy, archived, inactive

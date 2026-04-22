@@ -1,9 +1,9 @@
-# ============================================================================
-# GitHub Actions Workflow: Build & Release (Single-File, Self-Contained)
-# ============================================================================
+# ======================================================================================================
+# GitHub Actions Workflow: Build & Release (AOT, compiled binary with no external dependencies, win-x64)
+# ======================================================================================================
 #
 # GOALS:
-#   1) Single-file EXE (self-contained .NET, win-x64)
+#   1) Compiled exe file ((AOT, compiled binary with no external dependencies, win-x64)
 #   2) Clean Release only (no symbols/docs) + safety guards against strays
 #   3) Publish-based packaging (ready-to-run folder) with companions included
 #   4) Supply-chain hardening: action pinning (commit SHAs required)
@@ -16,7 +16,7 @@
 #   - On publishing a GitHub Release (Releases → Draft → Publish)
 #
 # NOTES:
-#   - Self-contained + SingleFile yields a single EXE; we also ship the icon,
+#   - AOT, compiled binary with no external dependencies, win-x64, yields a single EXE file; we also ship the icon,
 #     LICENSE, and any DLL companions emitted by publish.
 #   - ReadyToRun is enabled to improce startup speed.
 #   - Globalization is KEPT (InvariantGlobalization=false).
@@ -24,7 +24,7 @@
 #
 # ============================================================================
 
-name: Build and Release (SingleFile)
+name: Build and Release (AOT, compiled binary with no external dependencies)
 
 on:
   release:
@@ -100,7 +100,7 @@ jobs:
           Write-Host "Tag:        ${{ github.ref_name }}"
           Write-Host "Repository: ${{ github.repository }}"
           Write-Host "Runner:     ${{ runner.os }}"
-          Write-Host "Mode:       Publish (Self-Contained, SingleFile, win-x64)"
+          Write-Host "Mode:       Publish ((AOT, compiled binary with no external dependencies, win-x64)"
           Write-Host "═══════════════════════════════" -ForegroundColor Cyan
 
       # ----------------------------------------------------------------------
@@ -140,41 +140,66 @@ jobs:
           & "$env:DOTNET_ROOT\dotnet.exe" restore ..\Smart_Stay_Awake.sln -r win-x64 --verbosity minimal
 
       # ----------------------------------------------------------------------
-      # 7) Publish (Release, Self-Contained, SingleFile, win-x64)
+      # 7) Publish (Release, (AOT, compiled binary with no external dependencies, win-x64)
       #    We explicitly disable symbols/docs for a tight release.
       #    Globalization is kept. ReadyToRun enabled to improce startup speed.
       #    We also emit MSBuild logs for forensic verification.
       # ----------------------------------------------------------------------
-      - name: 🔨 Publish single-file EXE (Self-Contained, .NET 10, Release, x64)
+      - name: 🔨 Publish Compiled exe file EXE ((AOT, compiled binary with no external dependencies, win-x64)
         run: |
           $ErrorActionPreference = 'Stop'
           Set-StrictMode -Version Latest
           $ProgressPreference = 'SilentlyContinue'
-          Write-Host "Publishing Smart_Stay_Awake as SINGLE FILE (self-contained, win-x64)..." -ForegroundColor Yellow
+          Write-Host "Publishing Smart_Stay_Awake as compiled binary (AOT, compiled binary with no external dependencies, win-x64)..." -ForegroundColor Yellow
 
           # Force specific output directory
-          $publishPath = ".\publish-output"
-
+          # The Compiled exe file with embedded runtime should produce a single .exe in the publish folder. If you see a .exe + .dll, it means the publish process fell back to a framework-dependent build (not what we want for this release).
           # The -c Release flag sometimes gets overridden by project files, 
           # but -p:Configuration=Release is a direct MSBuild property that takes precedence.
           # Changed to pubish the Projecvt rather than the solution to avoid '-o' errors
           # For your current goal (1 single project, deterministic single EXE + known companions),
           #   'project' publish is the least surprising and keeps Step 8 simple.
+          #& "$env:DOTNET_ROOT\dotnet.exe" publish .\Smart_Stay_Awake.csproj `
+          #  -c Release `
+          #  -r win-x64 `
+          #  --self-contained true `
+          #  -p:SelfContained=true `
+          #  -p:Configuration=Release `
+          #  -p:Optimize=true `
+          #  -p:PublishSingleFile=true `
+          #  -p:PublishReadyToRun=true `
+          #  -p:PublishTrimmed=false `
+          #  -p:EnableCompressionInSingleFile=true `
+          #  -p:UseAppHost=true `
+          #  -p:InvariantGlobalization=false `
+          #  -p:IncludeNativeLibrariesForSelfExtract=true `
+          #  -p:IncludeAllContentForSelfExtract=true `
+          #  -p:DebugType=None `
+          #  -p:DebugSymbols=false `
+          #  -p:IncludeSymbols=false `
+          #  -p:GenerateDocumentationFile=false `
+          #  -p:ContinuousIntegrationBuild=true `
+          #  --no-restore `
+          #  -bl:publish.binlog `
+          #  -flp:"logfile=publish.diag.log;verbosity=diagnostic" `
+          #  -o $publishPath `
+          #  -v minimal
+
+          # Force specific output directory
+          # AOT single exe, compiled binary with no external dependencies, and publish trimming for minimal size. Also disable symbols/docs generation. 
+          $publishPath = ".\publish-output"
           & "$env:DOTNET_ROOT\dotnet.exe" publish .\Smart_Stay_Awake.csproj `
             -c Release `
             -r win-x64 `
-            --self-contained true `
-            -p:SelfContained=true `
+            -p:PublishAot=true `
             -p:Configuration=Release `
+            -p:_SuppressWinFormsTrimError=true `
+            -p:PublishTrimmed=true `
             -p:Optimize=true `
-            -p:PublishSingleFile=true `
-            -p:PublishReadyToRun=true `
-            -p:PublishTrimmed=false `
-            -p:EnableCompressionInSingleFile=true `
-            -p:UseAppHost=true `
+            -p:StripSymbols=true `
+            -p:TrimMode=link `
+            -p:StackTraceSupport=false `
             -p:InvariantGlobalization=false `
-            -p:IncludeNativeLibrariesForSelfExtract=true `
-            -p:IncludeAllContentForSelfExtract=true `
             -p:DebugType=None `
             -p:DebugSymbols=false `
             -p:IncludeSymbols=false `
@@ -330,7 +355,7 @@ jobs:
       # ----------------------------------------------------------------------
       # 9) Verify publish output contains the EXE we care about
       # ----------------------------------------------------------------------
-      - name: 🔍 Verify single-file EXE
+      - name: 🔍 Verify Compiled exe file EXE
         run: |
           $ErrorActionPreference = 'Stop'
           Set-StrictMode -Version Latest
@@ -402,7 +427,7 @@ jobs:
             Write-Host "Companions included ($($extra.Count) files):" -ForegroundColor Yellow
             $extra | ForEach-Object { Write-Host "   • $($_.Name)" -ForegroundColor Yellow }
           } else {
-            Write-Host "No companions were emitted by publish (single-file only)." -ForegroundColor Green
+            Write-Host "No companions were emitted by publish (Compiled exe file only)." -ForegroundColor Green
           }
 
           # Guard: no stray .pdb or .xml in staging
@@ -534,7 +559,7 @@ jobs:
           Write-Host "Version:   $version"
           Write-Host "TFM:       $env:TFM_NAME"
           Write-Host "Target:    win-x64"
-          Write-Host "Mode:      Self-Contained + SingleFile + .NET 10"
+          Write-Host "Mode:      Natively compiled binary, AOT + .NET 10 (zero external dependencies)"
           Write-Host "ZIP:       $zip ($sizeMB MB)"
           Write-Host "License:   LICENSE included"
           Write-Host "Companions: $companionSummary"
