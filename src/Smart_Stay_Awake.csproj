@@ -12,11 +12,24 @@
     <PlatformTarget>x64</PlatformTarget>
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <SelfContained>true</SelfContained>
+<!-- Comment out self-contained stuff -->
+<!--
+	<SelfContained>true</SelfContained>
 	<PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>true</PublishReadyToRun>
-    <PublishTrimmed>false</PublishTrimmed>
-	<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	<PublishTrimmed>false</PublishTrimmed>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+--> 
+<!-- START enable AOT stuff -->
+	<PublishAot>true</PublishAot>
+	<IsAotCompatible>true</IsAotCompatible>
+	<EnableAotAnalyzer>true</EnableAotAnalyzer>
+	<_AllowWindowsFormsWithTrim>true</_AllowWindowsFormsWithTrim>
+	<PublishTrimmed>true</PublishTrimmed>
+	<TrimMode>link</TrimMode>
+	<SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+	<StripSymbols>true</StripSymbols>
+<!-- FINISH enable AOT stuff -->
     <ErrorReport>none</ErrorReport>
     <Copyright>GNU AFFERO GENERAL PUBLIC LICENSE Version 3</Copyright>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -29,15 +42,6 @@
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(PublishAot)' == 'true'">
-	<IsAotCompatible>true</IsAotCompatible>
-	<EnableAotAnalyzer>true</EnableAotAnalyzer>
-	<PublishTrimmed>true</PublishTrimmed>
-	<_AllowWindowsFormsWithTrim>true</_AllowWindowsFormsWithTrim>
-	<SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
-	<StripSymbols>true</StripSymbols>
-  </PropertyGroup>
-		
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
