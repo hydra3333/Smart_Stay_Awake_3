@@ -37,7 +37,7 @@ namespace Smart_Stay_Awake
 
         // ---- App identity ----------------------------------------------------
         public const string APP_INTERNAL_NAME = "Smart_Stay_Awake";
-        public const string APP_DISPLAY_NAME = "Smart Stay Awake v3";
+        public const string APP_DISPLAY_NAME = "Smart Stay Awake v3.03";
 
         // ---- Tracing defaults -------------------------------------------------
         // Developer-only hard override (forces tracing even without --verbose).
